@@ -17,6 +17,7 @@ import { Dumbbell, Droplets, Moon, Utensils, Flame, Trophy, TrendingUp, ChevronR
 import { auth } from '@/lib/firebase';
 import { getUserTrialStartDate, getUserPremiumUntil } from '@/lib/firebaseUserService';
 import { shareContent } from '@/components/ShareCard';
+import CalixChat from '@/components/CalixChat';
 
 /* ─── Calix Orb (compact) ────────────────────────────────────────────────── */
 function CalixOrbSm({ speaking }: { speaking: boolean }) {
@@ -147,6 +148,7 @@ export default function DashboardPage() {
   const calix = useCalix();
   const autoSpokenRef = useRef(false);
   const [calixLLMMessage, setCalixLLMMessage] = useState('');
+  const [calixChatOpen, setCalixChatOpen] = useState(false);
 
   /* ── Computed values ── */
   const daysAbsent = getDaysAbsent();
@@ -335,7 +337,8 @@ export default function DashboardPage() {
         <TrialBanner />
 
         {/* ── Calix message card ── */}
-        <div className="rounded-3xl p-4"
+        <div className="rounded-3xl p-4 cursor-pointer active:scale-[0.99] transition-transform"
+          onClick={() => setCalixChatOpen(true)}
           style={{ background: calixType === 'warning' ? 'rgba(255,45,85,0.06)' : 'rgba(255,107,53,0.05)', border: `1px solid ${calixType === 'warning' ? 'rgba(255,45,85,0.2)' : 'rgba(255,107,53,0.15)'}` }}>
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">
@@ -566,6 +569,22 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Calix chat floating button */}
+      {!calixChatOpen && (
+        <button onClick={() => setCalixChatOpen(true)}
+          className="fixed bottom-24 right-4 z-[200] w-14 h-14 rounded-2xl flex items-center justify-center active:scale-90 transition-transform"
+          style={{ background: 'linear-gradient(135deg, #FF6B35, #FF2D55)', boxShadow: '0 4px 24px rgba(255,107,53,0.5)' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3.5" fill="white" opacity="0.95" />
+            <circle cx="12" cy="12" r="7" stroke="white" strokeWidth="1.5" opacity="0.5" />
+            <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="1" opacity="0.2" />
+          </svg>
+        </button>
+      )}
+
+      {/* Calix chat panel */}
+      {calixChatOpen && <CalixChat onClose={() => setCalixChatOpen(false)} />}
 
       {/* Sound wave keyframes */}
       <style>{`
