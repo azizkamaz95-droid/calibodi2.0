@@ -66,8 +66,8 @@ netlify/functions/
 - L'APK charge les assets depuis le bundle (pas de serveur) → API calls vers Netlify Functions
 
 ## URLs importantes
-- App Netlify : `https://calibodiv6.netlify.app`
-- Fonction analyze-food : `https://calibodiv6.netlify.app/.netlify/functions/analyze-food`
+- App Netlify : `https://dapper-truffle-6871a6.netlify.app`
+- Fonction analyze-food : `https://dapper-truffle-6871a6.netlify.app/.netlify/functions/analyze-food`
 - Repo GitHub : `https://github.com/azizkamaz95-droid/clibodi-v6`
 - Branch principale : `main`
 

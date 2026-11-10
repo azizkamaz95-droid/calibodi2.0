@@ -13,7 +13,7 @@ import type { Difficulty, InjuryZone } from '@/lib/exerciseLibrary';
 import { ChevronLeft, ChevronRight, Sparkles, User, Target, Ruler, BarChart3, HeartPulse, Check, Mail, Lock, Eye, EyeOff, Calendar, Utensils, PenLine } from 'lucide-react';
 import { openExternalLink } from '@/lib/openExternalLink';
 
-const RESEND_FUNCTION_URL = 'https://calibodiv6.netlify.app/.netlify/functions/send-verification-email';
+const RESEND_FUNCTION_URL = 'https://dapper-truffle-6871a6.netlify.app/.netlify/functions/send-verification-email';
 
 const INJURY_OPTIONS: { id: InjuryZone; label: string; icon: string }[] = [
   { id: 'knee', label: 'Genou(x)', icon: '🦵' },

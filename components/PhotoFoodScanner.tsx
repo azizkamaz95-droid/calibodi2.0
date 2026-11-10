@@ -62,7 +62,7 @@ export default function PhotoFoodScanner({ onClose, onFoodFound }: PhotoFoodScan
   const analyzeImage = useCallback(async (base64Image: string) => {
     setStep('analyzing');
     try {
-      const response = await fetch('https://calibodiv6.netlify.app/.netlify/functions/analyze-food', {
+      const response = await fetch('https://dapper-truffle-6871a6.netlify.app/.netlify/functions/analyze-food', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64Image }),
@@ -101,7 +101,7 @@ export default function PhotoFoodScanner({ onClose, onFoodFound }: PhotoFoodScan
     if (!name.trim()) return;
     setStep('recalculating');
     try {
-      const response = await fetch('https://calibodiv6.netlify.app/.netlify/functions/nutrition-lookup', {
+      const response = await fetch('https://dapper-truffle-6871a6.netlify.app/.netlify/functions/nutrition-lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dishName: name.trim() }),
