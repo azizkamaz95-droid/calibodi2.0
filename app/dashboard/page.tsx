@@ -7,6 +7,7 @@ import { useSleepStore } from '@/lib/sleepStore';
 import { useNutritionStore } from '@/lib/nutritionStore';
 import { useGameStore } from '@/lib/gameStore';
 import { useFreemiumStore } from '@/lib/freemiumStore';
+import { useCalix } from '@/lib/useCalix';
 import { calculateDailyScore, getDayMode } from '@/lib/calculations';
 import { scheduleDailyNotifications } from '@/services/pushNotificationService';
 import TrialBanner from '@/components/TrialBanner';
@@ -143,7 +144,9 @@ export default function DashboardPage() {
 
   const [emotionalPopup, setEmotionalPopup] = useState<{ id: string; icon: string; title: string; msg: string } | null>(null);
   const { speak, stop, speaking, muted, toggleMute } = useTTS();
+  const calix = useCalix();
   const autoSpokenRef = useRef(false);
+  const [calixLLMMessage, setCalixLLMMessage] = useState('');
 
   /* ── Computed values ── */
   const daysAbsent = getDaysAbsent();
@@ -240,20 +243,22 @@ export default function DashboardPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* Auto-speak once per day */
+  /* Auto-speak once per day — Calix LLM opening message */
   useEffect(() => {
-    if (autoSpokenRef.current || !calixMessage) return;
-    const today = new Date().toDateString();
-    const lastSpoken = (() => { try { return localStorage.getItem('calix_last_spoken'); } catch { return null; } })();
-    if (lastSpoken === today) return;
+    if (autoSpokenRef.current) return;
     autoSpokenRef.current = true;
-    const timer = setTimeout(() => {
-      speak(calixMessage);
-      try { localStorage.setItem('calix_last_spoken', today); } catch {}
+    const timer = setTimeout(async () => {
+      try {
+        const msg = await calix.openingMessage();
+        if (msg) setCalixLLMMessage(msg);
+      } catch {
+        // fallback to static message
+        speak(calixMessage);
+      }
     }, 1200);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calixMessage]);
+  }, []);
 
   useEffect(() => {
     const uStore = useUserStore.getState();
@@ -341,11 +346,14 @@ export default function DashboardPage() {
                 <span className="text-[11px] font-black tracking-widest uppercase text-cali-orange">Calix</span>
                 <SoundWave active={speaking} />
               </div>
-              <p className="text-sm text-gray-300 leading-relaxed">{calixMessage}</p>
+              {calix.isLoading && !calixLLMMessage
+                ? <p className="text-sm text-gray-500 italic">Calix réfléchit...</p>
+                : <p className="text-sm text-gray-300 leading-relaxed">{calixLLMMessage || calixMessage}</p>
+              }
             </div>
             {/* TTS controls */}
             <div className="flex flex-col gap-1.5 flex-shrink-0">
-              <button onClick={speaking ? stop : () => speak(calixMessage)}
+              <button onClick={speaking ? stop : () => speak(calixLLMMessage || calixMessage)}
                 className="w-8 h-8 rounded-xl flex items-center justify-center active:scale-90"
                 style={{ background: speaking ? 'rgba(255,107,53,0.2)' : 'rgba(255,255,255,0.06)', border: `1px solid ${speaking ? 'rgba(255,107,53,0.4)' : 'rgba(255,255,255,0.1)'}` }}>
                 {speaking ? <VolumeX size={14} className="text-cali-orange" /> : <Play size={14} className="text-gray-400" />}
