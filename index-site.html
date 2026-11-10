@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NVQ1DPBS7C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-NVQ1DPBS7C');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CaliBodi — Ton programme s'adapte à ta vraie vie</title>
+<meta name="description" content="CaliBodi crée un programme d'entraînement et de nutrition qui s'adapte à ton corps, tes objectifs et ton quotidien. Coach vocal IA Calix. Essai gratuit 7 jours.">
+<link rel="icon" type="image/png" href="images/CaliBodi.png">
+<meta property="og:title" content="CaliBodi — Ton programme s'adapte à ta vraie vie">
+<meta property="og:description" content="Entraînement, nutrition et récupération — un programme qui évolue avec toi. Essai gratuit 7 jours.">
+<meta property="og:image" content="images/CaliBodi.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://calibodi.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: #0A0A0F; color: #fff; overflow-x: hidden; }
+a { text-decoration: none; color: inherit; }
+
+/* Utility */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.gradient-text { background: linear-gradient(135deg, #FF6B35, #FF2D55, #FF6B35); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 18px 40px; border-radius: 16px; background: linear-gradient(135deg, #FF6B35, #FF2D55); color: #fff; font-weight: 800; font-size: 17px; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 32px rgba(255,107,53,0.35); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(255,107,53,0.45); }
+.btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+.section { padding: 100px 0; }
+.section-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; color: #FF6B35; margin-bottom: 16px; }
+.section-title { font-size: clamp(32px, 5vw, 48px); font-weight: 900; line-height: 1.1; margin-bottom: 20px; }
+.section-subtitle { font-size: 18px; color: #888; line-height: 1.6; }
+
+/* Nav */
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 16px 0; background: rgba(10,10,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+nav .container { display: flex; align-items: center; justify-content: space-between; }
+.nav-logo { display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 20px; }
+.nav-logo img { width: 38px; height: 38px; border-radius: 10px; object-fit: cover; }
+.nav-links { display: flex; align-items: center; gap: 32px; }
+.nav-links a { font-size: 14px; font-weight: 500; color: #999; transition: color 0.2s; }
+.nav-links a:hover { color: #fff; }
+.nav-cta { padding: 10px 24px; border-radius: 12px; background: linear-gradient(135deg, #FF6B35, #FF2D55); font-weight: 700; font-size: 14px; color: #fff !important; }
+
+/* Hero */
+.hero { padding: 150px 0 80px; position: relative; text-align: center; }
+.hero::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 900px; height: 900px; background: radial-gradient(circle, rgba(255,107,53,0.1) 0%, rgba(255,45,85,0.05) 40%, transparent 70%); pointer-events: none; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.2); border-radius: 50px; padding: 8px 18px; font-size: 13px; font-weight: 700; color: #FF6B35; margin-bottom: 28px; }
+.hero h1 { font-size: clamp(38px, 7vw, 68px); font-weight: 900; line-height: 1.05; margin-bottom: 24px; position: relative; }
+.hero-sub { font-size: 19px; color: #888; max-width: 560px; margin: 0 auto 40px; line-height: 1.65; }
+.hero-cta-group { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.hero-reassurance { font-size: 13px; color: #555; display: flex; align-items: center; gap: 6px; }
+
+/* Steps (how it works) */
+.steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-top: 64px; counter-reset: steps; }
+.step-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 32px 28px; position: relative; }
+.step-num { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35, #FF2D55); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; margin-bottom: 20px; }
+.step-card h3 { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+.step-card p { font-size: 14px; color: #777; line-height: 1.6; }
+.step-connector { display: none; }
+
+/* Pillars */
+.pillars-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 64px; }
+.pillar-card { border-radius: 24px; padding: 40px; position: relative; overflow: hidden; min-height: 220px; display: flex; flex-direction: column; justify-content: flex-end; }
+.pillar-card::before { content: ''; position: absolute; inset: 0; opacity: 0.08; background-size: cover; background-position: center; filter: grayscale(40%); }
+.pillar-training { background: linear-gradient(135deg, rgba(255,107,53,0.15) 0%, rgba(255,45,85,0.08) 100%); border: 1px solid rgba(255,107,53,0.2); }
+.pillar-nutrition { background: linear-gradient(135deg, rgba(0,212,255,0.12) 0%, rgba(0,255,135,0.06) 100%); border: 1px solid rgba(0,212,255,0.15); }
+.pillar-recovery { background: linear-gradient(135deg, rgba(191,90,242,0.12) 0%, rgba(58,107,255,0.06) 100%); border: 1px solid rgba(191,90,242,0.15); }
+.pillar-adapt { background: linear-gradient(135deg, rgba(255,214,0,0.1) 0%, rgba(255,107,53,0.06) 100%); border: 1px solid rgba(255,214,0,0.15); }
+.pillar-icon { font-size: 40px; margin-bottom: 16px; }
+.pillar-card h3 { font-size: 22px; font-weight: 900; margin-bottom: 8px; position: relative; z-index: 1; }
+.pillar-card p { font-size: 14px; color: #888; line-height: 1.6; position: relative; z-index: 1; }
+.pillar-card .pillar-icon { position: relative; z-index: 1; }
+
+/* Calix section */
+.calix-section { position: relative; overflow: hidden; }
+.calix-section::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 700px; height: 700px; background: radial-gradient(circle, rgba(255,107,53,0.07) 0%, transparent 70%); }
+.calix-content { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; position: relative; }
+.calix-quotes { display: flex; flex-direction: column; gap: 14px; }
+.calix-quote { background: rgba(255,107,53,0.06); border: 1px solid rgba(255,107,53,0.15); border-radius: 16px; padding: 18px 22px; font-size: 15px; color: #ccc; font-style: italic; position: relative; }
+.calix-quote::before { content: '🗣'; position: absolute; top: -12px; left: 16px; font-size: 20px; }
+.calix-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.25); border-radius: 50px; padding: 8px 18px; font-size: 13px; font-weight: 700; color: #FF6B35; margin-bottom: 20px; }
+
+/* Features */
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 64px; }
+.feature-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 36px; transition: all 0.3s; }
+.feature-card:hover { border-color: rgba(255,107,53,0.25); transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+.feature-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 18px; }
+.feature-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.feature-card p { font-size: 14px; color: #777; line-height: 1.6; }
+
+/* Pricing */
+.pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 64px; }
+.pricing-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 40px; text-align: center; transition: all 0.3s; position: relative; }
+.pricing-card.popular { border-color: rgba(255,107,53,0.45); background: linear-gradient(135deg, rgba(255,107,53,0.07) 0%, rgba(255,45,85,0.04) 100%); }
+.pricing-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #FF6B35, #FF2D55); padding: 6px 20px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 1px; white-space: nowrap; }
+.pricing-price { font-size: 46px; font-weight: 900; margin: 20px 0 4px; }
+.pricing-period { font-size: 14px; color: #666; }
+.pricing-features { list-style: none; margin: 28px 0; text-align: left; }
+.pricing-features li { padding: 9px 0; font-size: 14px; color: #aaa; display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.pricing-features li::before { content: '✓'; color: #FF6B35; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+
+/* Testimonials */
+.testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 64px; }
+.testimonial-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 24px; padding: 32px; }
+.testimonial-stars { color: #FF6B35; font-size: 14px; margin-bottom: 16px; }
+.testimonial-text { font-size: 15px; color: #ccc; line-height: 1.6; font-style: italic; margin-bottom: 20px; }
+.testimonial-author { font-size: 14px; font-weight: 700; }
+.testimonial-role { font-size: 12px; color: #555; margin-top: 3px; }
+
+/* FAQ */
+.faq-list { max-width: 760px; margin: 64px auto 0; }
+.faq-item { border-bottom: 1px solid rgba(255,255,255,0.06); }
+.faq-q { width: 100%; background: none; border: none; color: #fff; font-size: 16px; font-weight: 700; text-align: left; padding: 24px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-family: 'Inter', sans-serif; }
+.faq-q .faq-arrow { font-size: 18px; color: #FF6B35; transition: transform 0.3s; flex-shrink: 0; }
+.faq-q.open .faq-arrow { transform: rotate(45deg); }
+.faq-a { font-size: 15px; color: #777; line-height: 1.7; padding-bottom: 24px; display: none; }
+.faq-a.open { display: block; }
+
+/* Privacy */
+.privacy-box { max-width: 720px; margin: 0 auto; text-align: center; }
+.privacy-icon { width: 80px; height: 80px; border-radius: 50%; background: rgba(0,200,83,0.06); border: 1px solid rgba(0,200,83,0.15); display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 28px; }
+.privacy-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+.privacy-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #aaa; font-weight: 600; }
+.privacy-dot { width: 7px; height: 7px; border-radius: 50%; background: #00C853; flex-shrink: 0; }
+
+/* Footer */
+footer { padding: 60px 0 40px; border-top: 1px solid rgba(255,255,255,0.05); }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+.footer-brand p { font-size: 14px; color: #555; line-height: 1.6; margin-top: 12px; }
+.footer-col h4 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #555; margin-bottom: 16px; }
+.footer-col a { display: block; font-size: 14px; color: #777; margin-bottom: 10px; transition: color 0.2s; }
+.footer-col a:hover { color: #FF6B35; }
+.footer-bottom { margin-top: 40px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 13px; color: #333; text-align: center; }
+
+/* Section BG */
+.section-bg { position: relative; overflow: hidden; }
+.section-bg::before { content: ''; position: absolute; inset: 0; background-size: cover; background-position: center; background-attachment: fixed; filter: grayscale(100%); opacity: 0.1; z-index: 0; pointer-events: none; }
+.section-bg > * { position: relative; z-index: 1; }
+.section-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,15,0.7) 0%, transparent 30%, transparent 70%, rgba(10,10,15,0.7) 100%); z-index: 0; pointer-events: none; }
+.bg-training::before  { background-image: url('bg/training.jpg'); }
+.bg-nutrition::before { background-image: url('bg/nutrition.jpg'); }
+.bg-sleep::before     { background-image: url('bg/sleep.jpg'); }
+.bg-profile::before   { background-image: url('bg/profile.jpg'); }
+.bg-dashboard::before { background-image: url('bg/dashboard.jpg'); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .pillars-grid { grid-template-columns: 1fr; }
+  .calix-content { grid-template-columns: 1fr; gap: 40px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 38px; }
+  .hero-sub { font-size: 17px; }
+}
+@media (max-width: 480px) {
+  .container { padding: 0 18px; }
+  .section { padding: 72px 0; }
+  .footer-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="container">
+    <a href="#" class="nav-logo">
+      <img src="images/CaliBodi.png" alt="CaliBodi">
+      CaliBodi
+    </a>
+    <div class="nav-links">
+      <a href="#how">Comment ça marche</a>
+      <a href="#calix">Coach Calix</a>
+      <a href="#pricing">Tarifs</a>
+      <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="nav-cta">Essayer gratuitement</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero section-bg bg-dashboard">
+  <div class="container">
+    <div class="hero-eyebrow">✨ Programme adaptatif · Coach vocal IA</div>
+    <h1>Ton programme<br>s'adapte à<br><span class="gradient-text">ta vraie vie.</span></h1>
+    <p class="hero-sub">Voyage, blessure, cycle menstruel, journée chargée — CaliBodi ajuste ton entraînement et ta nutrition en temps réel. Pas d'excuse, juste des résultats.</p>
+    <div class="hero-cta-group">
+      <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="btn-primary" style="font-size:18px; padding: 20px 44px;">
+        Créer mon programme gratuitement →
+      </a>
+      <p class="hero-reassurance">
+        <span style="width:6px;height:6px;border-radius:50%;background:#00C853;display:inline-block;flex-shrink:0;"></span>
+        Gratuit · Aucune carte requise · Résultats dès la 1ère semaine
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COMMENT ÇA MARCHE ═══ -->
+<section class="section" id="how" style="padding-top: 80px; padding-bottom: 80px; border-top: 1px solid rgba(255,255,255,0.04);">
+  <div class="container" style="text-align: center;">
+    <p class="section-label">Comment ça marche</p>
+    <h2 class="section-title">Prêt en <span class="gradient-text">3 minutes.</span></h2>
+    <p class="section-subtitle" style="margin: 0 auto;">Ton profil, ton programme, ton coach — tout est configuré dès la première ouverture.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Tu décris ta situation</h3>
+        <p>Objectif, niveau, équipement disponible, contraintes physiques, régime alimentaire. Ça prend 2 min.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>On génère ton programme</h3>
+        <p>Un programme d'entraînement + un plan nutritionnel calculés pour ton corps, ton TDEE, tes objectifs.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Calix t'accompagne en live</h3>
+        <p>Ton coach vocal t'appelle par ton prénom, compte les reps, t'encourage et ajuste la séance si besoin.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h3>Le programme évolue avec toi</h3>
+        <p>En déplacement ? Blessé ? Fatigué ? CaliBodi s'adapte. Chaque jour, chaque contrainte.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 4 PILIERS ═══ -->
+<section class="section section-bg bg-training" style="padding-top: 80px; padding-bottom: 80px;">
+  <div class="container" style="text-align: center;">
+    <p class="section-label">Une app, 4 piliers</p>
+    <h2 class="section-title">Tout ce dont tu as besoin,<br><span class="gradient-text">connecté entre eux.</span></h2>
+    <div class="pillars-grid">
+      <div class="pillar-card pillar-training">
+        <div class="pillar-icon">🏋️</div>
+        <h3>Entraînement</h3>
+        <p>5 modes : Normal, Voyage, Blessure, Cycle menstruel, Callisthénie. Séances illimitées, exercices adaptés à ton équipement du moment.</p>
+      </div>
+      <div class="pillar-card pillar-nutrition">
+        <div class="pillar-icon">🥗</div>
+        <h3>Nutrition</h3>
+        <p>300+ recettes organisées par objectif. Scan photo IA multi-aliments. Scanner code-barres 3M+ produits. Base CIQUAL officielle.</p>
+      </div>
+      <div class="pillar-card pillar-recovery">
+        <div class="pillar-icon">🌙</div>
+        <h3>Récupération</h3>
+        <p>Suivi sommeil avec analyse personnalisée. Hydratation intelligente. 99+ conseils scientifiques quotidiens. Tout est connecté à ton entraînement.</p>
+      </div>
+      <div class="pillar-card pillar-adapt">
+        <div class="pillar-icon">🧠</div>
+        <h3>Adaptation IA</h3>
+        <p>Prédiction à 7 jours. Détection de fatigue et de blessure. Progression de charge automatique. Chaque donnée améliore les suivantes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CALIX ═══ -->
+<section class="section calix-section" id="calix">
+  <div class="container">
+    <div class="calix-content">
+      <div>
+        <div class="calix-badge">🗣️ Coach vocal IA</div>
+        <p class="section-label">Rencontre Calix</p>
+        <h2 class="section-title">Un coach qui te connaît.<br><span class="gradient-text">Vraiment.</span></h2>
+        <p style="font-size: 17px; color: #888; line-height: 1.7; margin-bottom: 32px;">
+          Calix connaît ton prénom, ton objectif, ta progression, tes blessures. Pendant la séance, il parle. Il compte. Il pousse. Il adapte.
+          C'est la seule app où tu entends ton prénom crié pendant ton dernier set.
+        </p>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 36px;">
+          <span style="background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.2); border-radius: 50px; padding: 7px 16px; font-size: 13px; font-weight: 700; color: #FF6B35;">🎯 Coaching personnalisé</span>
+          <span style="background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2); border-radius: 50px; padding: 7px 16px; font-size: 13px; font-weight: 700; color: #00D4FF;">🔢 Comptage des répétitions</span>
+          <span style="background: rgba(0,255,135,0.08); border: 1px solid rgba(0,255,135,0.2); border-radius: 50px; padding: 7px 16px; font-size: 13px; font-weight: 700; color: #00FF87;">💬 Feedback en temps réel</span>
+        </div>
+        <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="btn-primary">Rencontrer Calix →</a>
+      </div>
+      <div class="calix-quotes">
+        <div class="calix-quote" style="margin-top:20px;">
+          "Allez [Prénom], encore 3 répétitions — t'es à 80% de ta max, tu peux pousser !"
+        </div>
+        <div class="calix-quote">
+          "Super séance. Tu as battu ton record de pompes de la semaine dernière. Récupère bien ce soir."
+        </div>
+        <div class="calix-quote">
+          "Tu es en mode Voyage aujourd'hui — j'ai adapté ta séance pour une chambre d'hôtel. 25 min, aucun équipement."
+        </div>
+        <div class="calix-quote">
+          "Je vois que tu es à J3 de ton cycle. J'allège l'intensité et je priorise la mobilité aujourd'hui."
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FONCTIONNALITÉS CLÉS ═══ -->
+<section class="section section-bg bg-nutrition" id="features" style="border-top: 1px solid rgba(255,255,255,0.04);">
+  <div class="container" style="text-align: center;">
+    <p class="section-label">Ce qui change tout</p>
+    <h2 class="section-title">Conçu pour <span class="gradient-text">ta vraie vie.</span></h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(255,107,53,0.1);">🌍</div>
+        <h3>Mode Voyage</h3>
+        <p>En déplacement ou sans matériel, Calix génère une séance adaptée à ton espace et tes ressources disponibles. Hôtel, parc, chambre chez des amis — partout.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(255,45,85,0.1);">🩹</div>
+        <h3>Mode Blessure</h3>
+        <p>Sciatique, épaule, genou — tu indiques ta blessure, CaliBodi retire tous les exercices qui l'impactent et propose des alternatives sécurisées.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(191,90,242,0.1);">🌸</div>
+        <h3>Mode Cycle Menstruel</h3>
+        <p>Ton programme suit les 4 phases de ton cycle. Intensité adaptée, exercices respectueux de ton corps. Ton corps n'est pas une machine — cesse de le traiter comme tel.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(0,212,255,0.1);">📷</div>
+        <h3>Scan Photo IA</h3>
+        <p>Prends en photo ton assiette. L'IA détecte tous les aliments, calcule les macros, et vérifie si c'est compatible avec ton objectif du jour.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(0,255,135,0.1);">📊</div>
+        <h3>Prédiction à 7 jours</h3>
+        <p>Basée sur ta progression réelle, CaliBodi prédit où tu seras dans 7 jours si tu continues sur ta lancée. Concret, motivant, honnête.</p>
+      </div>
+      <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="feature-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; background: linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(255,45,85,0.05) 100%); border-color: rgba(255,107,53,0.2);">
+        <div style="font-size: 40px; margin-bottom: 16px;">+</div>
+        <h3>Et bien plus encore</h3>
+        <p>18 badges, mensurations, photos de progression, liste de courses, 300+ recettes, suivi hydratation et sommeil, 99+ conseils scientifiques…</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section class="section section-bg bg-profile" id="pricing">
+  <div class="container" style="text-align: center;">
+    <p class="section-label">Tarifs clairs, sans surprise</p>
+    <h2 class="section-title">Commence <span class="gradient-text">gratuitement.</span></h2>
+    <p class="section-subtitle" style="margin: 0 auto; max-width: 500px;">Essaie tout pendant 7 jours. Aucune carte requise pour commencer.</p>
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card">
+        <h3 style="font-size: 18px; font-weight: 800;">Gratuit</h3>
+        <div class="pricing-price">0€</div>
+        <div class="pricing-period">pour toujours</div>
+        <ul class="pricing-features" style="margin-top: 24px;">
+          <li>1 séance guidée par jour</li>
+          <li>3 recettes par catégorie</li>
+          <li>Suivi sommeil basique</li>
+          <li>Suivi hydratation basique</li>
+          <li>3 badges</li>
+        </ul>
+        <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="btn-secondary" style="width: 100%; justify-content: center;">Commencer</a>
+      </div>
+      <!-- Annual one-time BEST VALUE -->
+      <div class="pricing-card popular">
+        <div class="pricing-badge">⚡ MEILLEURE VALEUR</div>
+        <h3 style="font-size: 18px; font-weight: 800; margin-top: 8px;">Premium 1 an<br><span style="font-size: 13px; color: #aaa; font-weight: 500;">paiement unique · sans abonnement</span></h3>
+        <div class="pricing-price gradient-text">49,99€</div>
+        <div class="pricing-period">une seule fois · 12 mois d'accès</div>
+        <div style="margin: 14px 0 8px; background: rgba(255,107,53,0.08); border: 1px solid rgba(255,107,53,0.2); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #FF6B35; font-weight: 700; text-align: left;">
+          💰 Économise 69,89€ vs mensuel
+        </div>
+        <ul class="pricing-features">
+          <li>🗣️ Coach vocal Calix (par ton prénom)</li>
+          <li>Séances illimitées — 5 modes</li>
+          <li>300+ recettes par objectif</li>
+          <li>Scan photo IA + scanner code-barres</li>
+          <li>Prédiction IA 7 jours</li>
+          <li>Adaptation blessure, cycle, voyage</li>
+          <li>18 badges + photos + mensurations</li>
+          <li>Sommeil, hydratation, nutrition connectés</li>
+          <li>✨ Zéro abonnement récurrent</li>
+        </ul>
+        <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="btn-primary" style="width: 100%; justify-content: center;">Payer une fois →</a>
+        <p style="font-size: 12px; color: #555; margin-top: 12px;">Essai gratuit 7 jours inclus</p>
+      </div>
+      <!-- Monthly -->
+      <div class="pricing-card">
+        <h3 style="font-size: 18px; font-weight: 800;">Premium Mensuel</h3>
+        <div class="pricing-price">9,99€</div>
+        <div class="pricing-period">/mois · sans engagement</div>
+        <ul class="pricing-features" style="margin-top: 24px;">
+          <li>Toutes les fonctionnalités Premium</li>
+          <li>Coach vocal Calix</li>
+          <li>Séances illimitées</li>
+          <li>Annulable à tout moment</li>
+          <li>Essai 7 jours gratuit</li>
+        </ul>
+        <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="btn-secondary" style="width: 100%; justify-content: center;">Essayer 7 jours</a>
+      </div>
+    </div>
+    <!-- Guarantee -->
+    <div style="max-width: 480px; margin: 40px auto 0; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 28px;">
+      <div style="font-size: 28px; margin-bottom: 10px;">🛡️</div>
+      <p style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 8px;">Garantie 30 jours</p>
+      <p style="font-size: 13px; color: #777; line-height: 1.6;">Tu as suivi le programme et tu n'as pas de résultats ? On te rembourse intégralement. Aucune question posée.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TÉMOIGNAGES ═══ -->
+<section class="section section-bg bg-sleep" id="testimonials">
+  <div class="container" style="text-align: center;">
+    <p class="section-label">Ils l'utilisent chaque jour</p>
+    <h2 class="section-title">Ce qu'ils en <span class="gradient-text">disent.</span></h2>
+    <p style="font-size: 12px; color: #444; margin-bottom: 4px; font-style: italic;">Exemples illustratifs — les résultats varient selon chaque personne.</p>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"La voix de Calix, c'est comme avoir un vrai coach à côté de moi. J'ai perdu 8 kg en 3 mois sans aller à la salle."</p>
+        <p class="testimonial-author">Sarah K.</p>
+        <p class="testimonial-role">Objectif perte de poids</p>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Avec ma sciatique, je pensais ne plus pouvoir faire de sport. CaliBodi adapte chaque exercice — c'est la première app qui m'aide vraiment."</p>
+        <p class="testimonial-author">Mehdi R.</p>
+        <p class="testimonial-role">Reprise après blessure</p>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Le mode cycle menstruel a changé ma relation au sport. Mon corps est respecté, pas forcé. Et les recettes sont exactement ce dont j'avais besoin."</p>
+        <p class="testimonial-author">Léa M.</p>
+        <p class="testimonial-role">Objectif santé</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═══ -->
+<section class="section" style="padding-top: 80px; padding-bottom: 80px; border-top: 1px solid rgba(255,255,255,0.04);">
+  <div class="container" style="text-align: center;">
+    <p class="section-label">Questions fréquentes</p>
+    <h2 class="section-title">Des réponses <span class="gradient-text">directes.</span></h2>
+    <div class="faq-list" style="text-align: left;">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Est-ce que je peux utiliser CaliBodi sans matériel ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Oui. Le Mode Voyage est conçu pour ça : hôtel, chambre, parc, salon. Calix génère une séance adaptée à l'espace dont tu disposes. Aucun équipement requis.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Comment fonctionne l'essai gratuit de 7 jours ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Tu télécharges l'app, tu crées ton profil, tu accèdes à toutes les fonctionnalités Premium pendant 7 jours. Aucune carte bancaire requise pour commencer. À la fin des 7 jours, tu choisis si tu continues.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Que se passe-t-il si j'ai une blessure ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Tu renseignes ta blessure dans le profil. CaliBodi retire automatiquement tous les exercices qui pourraient l'aggraver et propose des alternatives adaptées. Tu peux continuer à t'entraîner sans risque.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Mes données sont-elles privées ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Tout est stocké localement sur ton téléphone. Tes photos, ton poids, tes mesures — CaliBodi ne les voit jamais, ne les stocke jamais, ne les revend jamais. Jamais.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          L'app fonctionne-t-elle sans connexion internet ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">La majorité des fonctionnalités (séances, recettes, suivi) fonctionnent hors connexion. Seuls le scan photo IA et quelques fonctionnalités avancées nécessitent une connexion.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Comment annuler mon abonnement ?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Directement depuis les paramètres de ton appareil (Google Play ou App Store). Aucune procédure compliquée, aucun service client à contacter. Un tap et c'est annulé.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ VIE PRIVÉE ═══ -->
+<section class="section" style="padding: 80px 0; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04);">
+  <div class="container">
+    <div class="privacy-box">
+      <div class="privacy-icon">🔒</div>
+      <p class="section-label" style="text-align:center;">Vie privée</p>
+      <h2 class="section-title" style="text-align:center;">Tes données restent<br><span class="gradient-text">sur ton téléphone.</span></h2>
+      <p style="font-size: 17px; color: #777; line-height: 1.7; max-width: 540px; margin: 0 auto;">
+        Chez CaliBodi, on ne collecte pas tes photos, ton poids, ni tes informations personnelles. Tout est stocké localement sur ton appareil. On ne voit rien, on ne stocke rien, on ne revend rien. <strong style="color:#fff;">Jamais.</strong>
+      </p>
+      <div class="privacy-badges">
+        <span class="privacy-badge"><span class="privacy-dot"></span> Stockage local uniquement</span>
+        <span class="privacy-badge"><span class="privacy-dot"></span> Aucune donnée revendue</span>
+        <span class="privacy-badge"><span class="privacy-dot"></span> Photos jamais uploadées</span>
+        <span class="privacy-badge"><span class="privacy-dot"></span> Zéro tracking publicitaire</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA FINAL ═══ -->
+<section class="section section-bg bg-profile" style="text-align: center; padding: 120px 0; position: relative;">
+  <div class="container" style="position: relative; z-index: 1;">
+    <p class="section-label">C'est le moment</p>
+    <h2 style="font-size: clamp(34px, 5vw, 56px); font-weight: 900; margin-bottom: 20px; line-height: 1.1;">
+      Ton programme commence<br><span class="gradient-text">aujourd'hui.</span>
+    </h2>
+    <p style="font-size: 18px; color: #888; max-width: 480px; margin: 0 auto 44px; line-height: 1.65;">
+      Gratuit pour commencer. Un vrai coach dès la première séance. Ton programme s'adapte à toi — pas l'inverse.
+    </p>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+      <a href="https://play.google.com/store/apps/details?id=com.calibodi.app" class="btn-primary" style="font-size: 18px; padding: 20px 48px;">
+        Créer mon programme gratuitement →
+      </a>
+      <p style="font-size: 13px; color: #444;">Essai gratuit 7 jours · Sans engagement · Annulable à tout moment</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo" style="margin-bottom: 6px;">
+          <img src="images/CaliBodi.png" alt="CaliBodi">
+          CaliBodi
+        </div>
+        <p>Ton programme s'adapte à ta vraie vie. Entraînement, nutrition, récupération — tout connecté, tout personnalisé.</p>
+        <p style="margin-top: 12px; font-size: 12px; color: #444; display: flex; align-items: center; gap: 6px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#00C853;flex-shrink:0;"></span>
+          Données privées — stockage local uniquement
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>App</h4>
+        <a href="#features">Fonctionnalités</a>
+        <a href="#pricing">Tarifs</a>
+        <a href="#calix">Coach Calix</a>
+        <a href="https://play.google.com/store/apps/details?id=com.calibodi.app">Télécharger</a>
+      </div>
+      <div class="footer-col">
+        <h4>Guides</h4>
+        <a href="/application-fitness-maison">Fitness maison</a>
+        <a href="/perte-de-poids">Perte de poids</a>
+        <a href="/coach-fitness-ia">Coach IA</a>
+        <a href="/suivi-nutrition">Suivi nutrition</a>
+        <a href="/suivi-hydratation">Hydratation</a>
+        <a href="/recettes-fitness">Recettes fitness</a>
+        <a href="/calisthenics-debutant">Callisthénie débutant</a>
+      </div>
+      <div class="footer-col">
+        <h4>Légal &amp; Contact</h4>
+        <a href="/privacy">Confidentialité</a>
+        <a href="/terms">Conditions d'utilisation</a>
+        <a href="/refund">Remboursement</a>
+        <a href="mailto:Support@calibodi.com">Support@calibodi.com</a>
+        <a href="https://instagram.com/calibodi">Instagram</a>
+        <a href="https://tiktok.com/@calibodi">TikTok</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2026 CaliBodi. Tous droits réservés.
+    </div>
+  </div>
+</footer>
+
+<script>
+function toggleFaq(btn) {
+  const isOpen = btn.classList.contains('open');
+  document.querySelectorAll('.faq-q.open').forEach(q => {
+    q.classList.remove('open');
+    q.nextElementSibling.classList.remove('open');
+  });
+  if (!isOpen) {
+    btn.classList.add('open');
+    btn.nextElementSibling.classList.add('open');
+  }
+}
+</script>
+</body>
+</html>

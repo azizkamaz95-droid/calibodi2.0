@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CaliBodi — Connexion Google</title>
+  <style>
+    body {
+      background: #0A0A0F; color: #fff;
+      font-family: -apple-system, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0; text-align: center; padding: 24px;
+      box-sizing: border-box;
+    }
+    .card { max-width: 320px; }
+    .logo { font-size: 2rem; font-weight: 800; color: #FF6B35; margin-bottom: 8px; }
+    p { color: #9ca3af; font-size: 0.9rem; margin: 0; }
+    .spinner {
+      width: 32px; height: 32px; border: 3px solid #333;
+      border-top-color: #FF6B35; border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 24px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">CaliBodi</div>
+    <div class="spinner" id="spinner"></div>
+    <p id="msg">Connexion avec Google en cours…</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+    import {
+      getAuth,
+      signInWithRedirect,
+      getRedirectResult,
+      GoogleAuthProvider,
+    } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+    const app = initializeApp({
+      apiKey: 'AIzaSyC7590ljHdMhjYdGSUQEZdjSh4bR54tfLI',
+      authDomain: 'calibodi-v3.firebaseapp.com',
+      projectId: 'calibodi-v3',
+      storageBucket: 'calibodi-v3.firebasestorage.app',
+      messagingSenderId: '647417621484',
+      appId: '1:647417621484:web:de5d361935ccddaffb2ec9',
+    });
+
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    provider.addScope('profile');
+    provider.addScope('email');
+
+    const msg = document.getElementById('msg');
+    const spinner = document.getElementById('spinner');
+
+    try {
+      const result = await getRedirectResult(auth);
+      if (result) {
+        // Authentification réussie — retour à l'app via deep link
+        spinner.style.borderTopColor = '#22c55e';
+        msg.textContent = 'Connecté ! Retour à CaliBodi…';
+        const idToken = await result.user.getIdToken();
+        const uid = encodeURIComponent(result.user.uid);
+        const email = encodeURIComponent(result.user.email || '');
+        const token = encodeURIComponent(idToken);
+        window.location.href = `calibodi://google-auth?idToken=${token}&uid=${uid}&email=${email}`;
+      } else {
+        // Premier chargement — lance la redirection vers Google
+        // La CCT a les cookies Chrome → Google affiche le sélecteur de comptes
+        msg.textContent = 'Redirection vers Google…';
+        await signInWithRedirect(auth, provider);
+      }
+    } catch (err) {
+      spinner.style.display = 'none';
+      msg.textContent = `Erreur: ${err?.code || err?.message || err}`;
+      setTimeout(() => {
+        const code = encodeURIComponent(err?.code || err?.message || 'unknown');
+        window.location.href = `calibodi://google-auth-error?error=${code}`;
+      }, 2500);
+    }
+  </script>
+</body>
+</html>

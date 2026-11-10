@@ -1,0 +1,329 @@
+name: Build CaliBodi Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          BUILD_TARGET: apk
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
+          packages: ''
+
+      - name: Add Capacitor Android
+        run: npx cap add android || true
+
+      - name: Inject google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Add Firebase App Link intent filter to AndroidManifest
+        run: |
+          python3 << 'PYEOF'
+          with open('android/app/src/main/AndroidManifest.xml', 'r') as f:
+              src = f.read()
+          if 'calibodi-v3.firebaseapp.com' not in src:
+              # App Link pour intercepter le callback Firebase OAuth
+              # Quand signInWithPopup redirige vers calibodi-v3.firebaseapp.com/__/auth/handler,
+              # Android ouvre l'app directement → getRedirectResult() termine la connexion
+              intent_filter = '''
+                      <intent-filter android:autoVerify="true">
+                          <action android:name="android.intent.action.VIEW" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <category android:name="android.intent.category.BROWSABLE" />
+                          <data android:scheme="https"
+                                android:host="calibodi-v3.firebaseapp.com"
+                                android:pathPrefix="/__/auth/handler" />
+                      </intent-filter>'''
+              src = src.replace('</activity>', intent_filter + '\n        </activity>', 1)
+              with open('android/app/src/main/AndroidManifest.xml', 'w') as f:
+                  f.write(src)
+              print('✓ Firebase App Link intent filter added')
+          else:
+              print('Intent filter already present')
+          PYEOF
+
+      - name: Patch ProGuard rules for Capacitor + JS bundle
+        run: |
+          PROGUARD="android/app/proguard-rules.pro"
+          cat >> "$PROGUARD" << 'EOF'
+          # Keep Capacitor bridge + all plugins
+          -keep class com.getcapacitor.** { *; }
+          -keep class com.calibodi.** { *; }
+          # Keep WebView JS interface
+          -keepclassmembers class * {
+              @android.webkit.JavascriptInterface <methods>;
+          }
+          # Keep Firebase
+          -keep class com.google.firebase.** { *; }
+          -keep class com.google.android.gms.** { *; }
+          # Keep RevenueCat
+          -keep class com.revenuecat.** { *; }
+          # Prevent stripping of JS assets
+          -keep class android.webkit.WebView { *; }
+          # Keep annotations (required for Capacitor plugin discovery)
+          -keepattributes *Annotation*
+          # Keep all Capacitor plugin subclasses
+          -keep public class * extends com.getcapacitor.Plugin
+          # Keep @capacitor-firebase/authentication plugin (native Google Sign-In)
+          -keep class io.capawesome.** { *; }
+          # Suppress missing Facebook SDK classes (not used, bundled by capacitor-firebase/auth)
+          -dontwarn com.facebook.**
+          -dontwarn com.twitter.**
+          -dontwarn com.github.theapache64.**
+          EOF
+          echo "✓ ProGuard rules patched"
+
+      - name: Patch MainActivity — audio autoplay + remove WebView UA marker
+        run: |
+          MAIN="android/app/src/main/java/com/calibodi/app/MainActivity.java"
+          if [ ! -f "$MAIN" ]; then echo "MainActivity.java non trouvé, skip"; exit 0; fi
+          # Capacitor generates an empty class: public class MainActivity extends BridgeActivity {}
+          # We replace the empty body with an onCreate override that:
+          #  1. removes "wv" from user-agent (Firebase blocks signInWithRedirect in WebViews)
+          #  2. disables media-playback user-gesture requirement (Google TTS audio.play())
+          python3 << 'PYEOF'
+          import re
+          with open('android/app/src/main/java/com/calibodi/app/MainActivity.java', 'r') as f:
+              src = f.read()
+
+          # Add imports if missing
+          if 'android.os.Bundle' not in src:
+              src = src.replace(
+                  'import com.getcapacitor.BridgeActivity;',
+                  'import com.getcapacitor.BridgeActivity;\nimport android.os.Bundle;\nimport android.webkit.WebSettings;'
+              )
+
+          on_create = '''
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  try {
+                      android.webkit.WebView wv = this.bridge.getWebView();
+                      WebSettings ws = wv.getSettings();
+                      // Remove ALL WebView markers — both Firebase and Google check these
+                      // "; wv)" and " wv)" = Capacitor WebView flag
+                      // "Version/4.0 " = Android WebView flag Google also detects
+                      String ua = ws.getUserAgentString();
+                      ua = ua.replace("; wv)", ")").replace(" wv)", ")").replace("Version/4.0 ", "");
+                      ws.setUserAgentString(ua);
+                      // Allow audio.play() without prior user gesture (Google TTS)
+                      ws.setMediaPlaybackRequiresUserGesture(false);
+                  } catch (Exception ignored) {}
+              }'''
+
+          # Replace empty class body or inject before closing brace if onCreate absent
+          if re.search(r'public class MainActivity extends BridgeActivity \{\s*\}', src):
+              src = re.sub(
+                  r'public class MainActivity extends BridgeActivity \{\s*\}',
+                  'public class MainActivity extends BridgeActivity {' + on_create + '\n}',
+                  src
+              )
+          elif 'onCreate' not in src:
+              src = src.rstrip()
+              if src.endswith('}'):
+                  src = src[:-1] + on_create + '\n}'
+
+          with open('android/app/src/main/java/com/calibodi/app/MainActivity.java', 'w') as f:
+              f.write(src)
+          print('✓ MainActivity.java patché')
+          PYEOF
+          echo "=== MainActivity.java ==="
+          cat "$MAIN"
+
+      - name: Fix edge-to-edge Android 15
+        run: |
+          STYLES="android/app/src/main/res/values/styles.xml"
+          if [ -f "$STYLES" ]; then
+            # Opt-out de l'edge-to-edge forcé Android 15 dans tous les styles
+            sed -i 's|</style>|    <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>\n</style>|g' "$STYLES"
+            echo "=== styles.xml patché ==="
+            cat "$STYLES"
+          else
+            echo "styles.xml non trouvé, skip"
+          fi
+
+      - name: Copy CaliBodi icons
+        run: bash scripts/copy-icons.sh
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/calibodi-release.keystore
+
+      - name: Print SHA-1 (for Firebase Console)
+        run: |
+          keytool -list -v \
+            -keystore android/app/calibodi-release.keystore \
+            -alias "${{ secrets.KEY_ALIAS }}" \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            2>/dev/null | grep -E "SHA1:|SHA256:"
+
+      - name: Configure signing and fix gradle
+        run: |
+          python3 << 'PYEOF'
+          import re, os
+
+          # Capacitor 8 defines SDK versions in android/variables.gradle
+          variables_path = 'android/variables.gradle'
+          if os.path.exists(variables_path):
+              with open(variables_path, 'r') as f:
+                  content = f.read()
+              content = re.sub(r'\bcompileSdkVersion\s*=\s*\d+', 'compileSdkVersion = 36', content)
+              content = re.sub(r'\btargetSdkVersion\s*=\s*\d+', 'targetSdkVersion = 36', content)
+              with open(variables_path, 'w') as f:
+                  f.write(content)
+              print('variables.gradle patched:', open(variables_path).read()[:300])
+
+          with open('android/app/build.gradle', 'r') as f:
+              content = f.read()
+
+          # Also patch build.gradle directly (for older Cap versions)
+          content = re.sub(r'\bcompileSdk\b\s*=?\s*\d+', 'compileSdk 36', content)
+          content = re.sub(r'\btargetSdkVersion\b\s*=?\s*\d+', 'targetSdkVersion 36', content)
+          content = re.sub(r'\btargetSdk\b\s*=?\s*\d+', 'targetSdk 36', content)
+
+          # Set versionCode
+          content = re.sub(r'versionCode\s+\d+', 'versionCode 30', content)
+          content = re.sub(r'versionName\s+"[\d\.]+"', 'versionName "1.4.0"', content)
+
+          # Supprimer le bloc signingConfigs existant s'il est mal formé
+          content = re.sub(r'signingConfigs \{.*?\}', '', content, flags=re.DOTALL)
+
+          # Ajouter un bon bloc signingConfigs juste avant buildTypes
+          signing_block = '''    signingConfigs {
+              release {
+                  storeFile file("calibodi-release.keystore")
+                  storePassword System.getenv("KEYSTORE_PASSWORD") ?: ""
+                  keyAlias System.getenv("KEY_ALIAS") ?: ""
+                  keyPassword System.getenv("KEY_PASSWORD") ?: ""
+              }
+          }
+          '''
+          content = content.replace('    buildTypes {', signing_block + '    buildTypes {')
+
+          # Activer signingConfig + minification dans le buildType release
+          content = re.sub(
+              r'(release \{[^}]*?)(minifyEnabled)',
+              r'\1signingConfig signingConfigs.release\n            \2',
+              content,
+              flags=re.DOTALL
+          )
+          # Enable minification and obfuscation (fixes Play Store DEX optimization warning)
+          content = re.sub(r'minifyEnabled\s+false', 'minifyEnabled true', content)
+          content = re.sub(r'shrinkResources\s+false', 'shrinkResources true', content)
+          # Use proguard-android-optimize.txt (not proguard-android.txt which has -dontoptimize)
+          # This is what causes 0% optimization score on Play Store Android Vitals
+          content = content.replace(
+              "getDefaultProguardFile('proguard-android.txt')",
+              "getDefaultProguardFile('proguard-android-optimize.txt')"
+          )
+          content = content.replace(
+              'getDefaultProguardFile("proguard-android.txt")',
+              'getDefaultProguardFile("proguard-android-optimize.txt")'
+          )
+
+          # Apply google-services plugin (required for Firebase Auth)
+          if "com.google.gms.google-services" not in content:
+              if "apply plugin: 'com.android.application'" in content:
+                  content = content.replace(
+                      "apply plugin: 'com.android.application'",
+                      "apply plugin: 'com.android.application'\napply plugin: 'com.google.gms.google-services'"
+                  )
+              elif 'apply plugin: "com.android.application"' in content:
+                  content = content.replace(
+                      'apply plugin: "com.android.application"',
+                      'apply plugin: "com.android.application"\napply plugin: "com.google.gms.google-services"'
+                  )
+              else:
+                  content = "apply plugin: 'com.google.gms.google-services'\n" + content
+
+          # Add play-services-auth dependency (required by @capacitor-firebase/authentication)
+          if 'play-services-auth' not in content:
+              content = content.replace(
+                  'dependencies {',
+                  "dependencies {\n    implementation 'com.google.android.gms:play-services-auth:20.7.0'",
+                  1
+              )
+
+          with open('android/app/build.gradle', 'w') as f:
+              f.write(content)
+
+          # Add google-services classpath to root build.gradle
+          root_gradle = 'android/build.gradle'
+          with open(root_gradle, 'r') as f:
+              root = f.read()
+          if 'com.google.gms:google-services' not in root:
+              root = root.replace(
+                  'dependencies {',
+                  'dependencies {\n        classpath "com.google.gms:google-services:4.4.2"',
+                  1
+              )
+              with open(root_gradle, 'w') as f:
+                  f.write(root)
+              print('root build.gradle patched with google-services classpath')
+
+          print('build.gradle OK')
+          PYEOF
+
+          echo "=== build.gradle final ==="
+          cat android/app/build.gradle
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Build AAB for Play Store
+        working-directory: android
+        run: ./gradlew bundleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Create GitHub Release and upload APK + AAB
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "CaliBodi build #${{ github.run_number }}"
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/bundle/release/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

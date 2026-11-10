@@ -1,0 +1,11 @@
+[build]
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "out"
+
+[build.environment]
+  BUILD_TARGET = "apk"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "nft"
+  external_node_modules = ["firebase-admin"]

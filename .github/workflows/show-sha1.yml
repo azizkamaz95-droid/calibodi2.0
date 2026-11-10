@@ -1,0 +1,18 @@
+name: Show Keystore SHA-1
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sha1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decode keystore and print SHA-1
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          keytool -list -v \
+            -keystore release.keystore \
+            -alias "${{ secrets.KEY_ALIAS }}" \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+            2>/dev/null | grep -E "SHA1:|SHA256:"
+          rm release.keystore
