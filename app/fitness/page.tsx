@@ -115,13 +115,13 @@ export default function FitnessPage() {
   };
 
   return (
-    <div className="pb-20 page-enter relative">
-      
+    <div className="pb-20 page-enter relative" style={{ background: 'var(--bg)', minHeight: '100dvh' }}>
+
       <div className="relative z-10 p-5 space-y-5">
         <div>
-          <h1 className="text-2xl font-display font-black text-white">Training</h1>
-          <p className="text-xs text-cali-light-text mt-0.5">Séance adaptée · {session.totalDuration} min · {Math.round(session.intensityMultiplier * 100)}% intensité · ~{estimatedKcal} kcal</p>
-          <p className="text-[10px] text-gray-600 mt-0.5">{weekSessionCount} / {profile.sessionsPerWeek} séances cette semaine</p>
+          <h1 className="text-2xl font-display font-black" style={{ color: 'var(--text-primary)' }}>Training</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Séance adaptée · {session.totalDuration} min · {Math.round(session.intensityMultiplier * 100)}% intensité · ~{estimatedKcal} kcal</p>
+          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{weekSessionCount} / {profile.sessionsPerWeek} séances cette semaine</p>
         </div>
 
         {/* Hydration warning before session */}
@@ -140,7 +140,7 @@ export default function FitnessPage() {
           <div className="space-y-2">
             {session.adaptationMessages.map((msg, i) => (
               <div key={i} className="bg-cali-purple/5 border border-cali-purple/20 rounded-2xl p-3">
-                <p className="text-xs text-gray-300 leading-relaxed">{msg}</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{msg}</p>
               </div>
             ))}
           </div>
@@ -148,7 +148,7 @@ export default function FitnessPage() {
 
         {/* Mode Selection */}
         <div>
-          <p className="text-xs text-gray-500 mb-3 font-medium">MODE DE SÉANCE</p>
+          <p className="text-xs mb-3 font-medium" style={{ color: 'var(--text-tertiary)' }}>MODE DE SÉANCE</p>
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1" style={{ touchAction: 'pan-x pan-y' }}>
             {(profile.gender === 'female'
               ? [MODES[0], MODES[4], MODES[1], MODES[2], MODES[3]]
@@ -162,11 +162,12 @@ export default function FitnessPage() {
                 className={`flex-shrink-0 px-4 py-3 rounded-2xl border transition-all relative ${
                   selectedMode === mode.id
                     ? 'bg-cali-orange/15 border-cali-orange/40 glow-orange'
-                    : `${modeColors[mode.id]?.bg || 'bg-cali-surface'} ${modeColors[mode.id]?.border || 'border-white/5'}`
+                    : `${modeColors[mode.id]?.bg || ''} ${modeColors[mode.id]?.border || ''}`
                 } ${isLocked ? 'opacity-60' : ''}`}
+                style={selectedMode !== mode.id ? { background: 'var(--bg-surface)', borderColor: 'var(--border)' } : undefined}
               >
                 <span className="text-lg">{mode.icon}</span>
-                <p className={`text-xs font-bold mt-1 ${selectedMode === mode.id ? 'text-cali-orange' : 'text-gray-400'}`}>
+                <p className={`text-xs font-bold mt-1 ${selectedMode === mode.id ? 'text-cali-orange' : ''}`} style={selectedMode !== mode.id ? { color: 'var(--text-tertiary)' } : undefined}>
                   {mode.label}
                 </p>
                 {isLocked && <div className="absolute -top-1.5 -right-1.5"><LockBadge /></div>}
@@ -178,15 +179,16 @@ export default function FitnessPage() {
         {/* Cycle Phase Selector */}
         {showCycle && (
           <div className="space-y-2">
-            <p className="text-xs text-gray-500 font-medium">PHASE DU CYCLE</p>
+            <p className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>PHASE DU CYCLE</p>
             <div className="grid grid-cols-2 gap-2">
               {CYCLE_PHASES.map((phase) => (
                 <button
                   key={phase.id}
                   onClick={() => setCyclePhase(phase.id)}
                   className={`p-3 rounded-2xl border text-xs font-medium transition-all ${
-                    cyclePhase === phase.id ? phase.color : 'bg-cali-surface border-white/5 text-gray-500'
+                    cyclePhase === phase.id ? phase.color : ''
                   }`}
+                  style={cyclePhase !== phase.id ? { background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-tertiary)' } : undefined}
                 >
                   {phase.label}
                 </button>
@@ -198,15 +200,16 @@ export default function FitnessPage() {
         {/* Express Duration Selector */}
         {selectedMode === 'express' && (
           <div className="space-y-2">
-            <p className="text-xs text-gray-500 font-medium flex items-center gap-1"><Timer size={12} /> DURÉE EXPRESS</p>
+            <p className="text-xs font-medium flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}><Timer size={12} /> DURÉE EXPRESS</p>
             <div className="grid grid-cols-3 gap-2">
               {([5, 10, 15] as const).map((d) => (
                 <button
                   key={d}
                   onClick={() => setExpressDuration(d)}
                   className={`p-3 rounded-2xl border text-center transition-all ${
-                    expressDuration === d ? 'bg-cali-orange/15 border-cali-orange/40 text-cali-orange' : 'bg-cali-surface border-white/5 text-gray-500'
+                    expressDuration === d ? 'bg-cali-orange/15 border-cali-orange/40 text-cali-orange' : ''
                   }`}
+                  style={expressDuration !== d ? { background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-tertiary)' } : undefined}
                 >
                   <p className="text-lg font-bold">{d}</p>
                   <p className="text-[10px]">min</p>
@@ -217,18 +220,18 @@ export default function FitnessPage() {
         )}
 
         {/* Session Preview */}
-        <div className="relative bg-cali-card rounded-3xl p-5 border border-white/5 space-y-4">
+        <div className="relative rounded-3xl p-5 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cali-blue via-purple-500 to-transparent rounded-t-3xl" />
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-display font-bold text-white">Ta séance</h2>
+            <h2 className="text-lg font-display font-bold" style={{ color: 'var(--text-primary)' }}>Ta séance</h2>
             <div className="flex gap-2">
-              <div className="bg-cali-surface rounded-xl px-2.5 py-1 flex items-center gap-1">
+              <div className="rounded-xl px-2.5 py-1 flex items-center gap-1" style={{ background: 'var(--bg-surface)' }}>
                 <Clock size={12} className="text-cali-blue" />
-                <span className="text-xs text-gray-400">{session.totalDuration} min</span>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{session.totalDuration} min</span>
               </div>
-              <div className="bg-cali-surface rounded-xl px-2.5 py-1 flex items-center gap-1">
+              <div className="rounded-xl px-2.5 py-1 flex items-center gap-1" style={{ background: 'var(--bg-surface)' }}>
                 <Flame size={12} className="text-cali-orange" />
-                <span className="text-xs text-gray-400">{Math.round(session.intensityMultiplier * 100)}%</span>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{Math.round(session.intensityMultiplier * 100)}%</span>
               </div>
             </div>
           </div>
@@ -240,8 +243,8 @@ export default function FitnessPage() {
               <div key={ex.id} className="flex items-center gap-3 bg-cali-orange/5 border border-cali-orange/10 rounded-xl px-3 py-2">
                 <span className="text-lg">🔥</span>
                 <div className="flex-1">
-                  <p className="text-sm text-white font-medium">{ex.nameFr}</p>
-                  <p className="text-[10px] text-gray-500">{ex.defaultDuration}s</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ex.nameFr}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{ex.defaultDuration}s</p>
                 </div>
               </div>
             ))}
@@ -253,14 +256,14 @@ export default function FitnessPage() {
                   <span className="text-xs font-bold text-cali-blue">{i + 1}</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-white font-medium">{ex.nameFr}</p>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ex.nameFr}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
                     {ex.isTimeBased
                       ? `${Math.round(ex.defaultDuration * session.intensityMultiplier)}s`
                       : `${Math.max(1, Math.round(ex.defaultDuration * session.intensityMultiplier))} reps`} × {ex.defaultSets} séries
                   </p>
                 </div>
-                <ChevronRight size={14} className="text-gray-600" />
+                <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
               </div>
             ))}
 
@@ -269,8 +272,8 @@ export default function FitnessPage() {
               <div key={ex.id} className="flex items-center gap-3 bg-purple-500/5 border border-purple-500/10 rounded-xl px-3 py-2">
                 <span className="text-lg">🧘</span>
                 <div className="flex-1">
-                  <p className="text-sm text-white font-medium">{ex.nameFr}</p>
-                  <p className="text-[10px] text-gray-500">{ex.defaultDuration}s</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ex.nameFr}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{ex.defaultDuration}s</p>
                 </div>
               </div>
             ))}

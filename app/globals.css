@@ -159,6 +159,23 @@ body { min-height: 100dvh; }
   );
 }
 
+/* ─── Light-theme overrides for legacy cali-* Tailwind classes ───────────── */
+[data-theme="light"] .bg-cali-card   { background-color: var(--bg-card)    !important; }
+[data-theme="light"] .bg-cali-surface{ background-color: var(--bg-surface) !important; }
+[data-theme="light"] .bg-cali-dark   { background-color: var(--bg)         !important; }
+[data-theme="light"] .text-cali-light-text { color: var(--text-secondary) !important; }
+/* text-white used as label text should adapt in light mode */
+[data-theme="light"] p.text-white,
+[data-theme="light"] h1.text-white,
+[data-theme="light"] h2.text-white,
+[data-theme="light"] h3.text-white,
+[data-theme="light"] span.text-white,
+[data-theme="light"] label.text-white { color: var(--text-primary) !important; }
+/* Inputs */
+[data-theme="light"] input.text-white { color: var(--text-primary) !important; }
+[data-theme="light"] .border-white\/5  { border-color: var(--border) !important; }
+[data-theme="light"] .border-white\/10 { border-color: var(--border) !important; }
+
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
