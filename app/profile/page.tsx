@@ -13,8 +13,9 @@ import { deleteUser, sendEmailVerification } from 'firebase/auth';
 import { redeemPromoCode, createPromoCode, ADMIN_EMAIL } from '@/lib/firebaseUserService';
 
 import PrivacyBadge from '@/components/PrivacyBadge';
-import { User, Crown, HeartPulse, TrendingUp, LogOut, ChevronRight, Bell, Utensils, Calendar, X, Camera, Trash2 } from 'lucide-react';
+import { User, Crown, HeartPulse, TrendingUp, LogOut, ChevronRight, Bell, Utensils, Calendar, X, Camera, Trash2, Moon, Sun, Dumbbell, Scale, Settings2 } from 'lucide-react';
 import { openExternalLink } from '@/lib/openExternalLink';
+import { useThemeStore, applyTheme } from '@/lib/themeStore';
 
 const INJURY_OPTIONS: { id: InjuryZone; label: string; icon: string }[] = [
   { id: 'knee', label: 'Genou(x)', icon: '🦵' },{ id: 'back', label: 'Dos / Lombaires', icon: '🔙' },
@@ -152,6 +153,8 @@ export default function ProfilePage() {
   const [adminLoading, setAdminLoading] = useState(false);
 
   const isAdmin = auth.currentUser?.email?.toLowerCase() === ADMIN_EMAIL;
+  const { theme, setTheme } = useThemeStore();
+  const toggleTheme = () => { const next = theme === 'dark' ? 'light' : 'dark'; setTheme(next); applyTheme(next); };
 
   const handleRedeemPromo = async () => {
     if (!promoCode.trim()) return;
@@ -207,182 +210,260 @@ export default function ProfilePage() {
 
   const phaseLabels = { menstrual: '🔴 Menstruelle', follicular: '🟢 Folliculaire', ovulation: '🟡 Ovulation', luteal: '🟠 Lutéale' };
 
-  return (
-    <div className="pb-20 page-enter relative">
-      
-      <div className="relative z-10 p-5 space-y-5">
-        {/* Email non vérifié — bandeau discret */}
-        {!emailVerified && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
-            <p className="text-xs text-yellow-400">Vérifie ton email pour sécuriser ton compte.</p>
-            {verificationSent ? (
-              <span className="text-[10px] text-yellow-600 flex-shrink-0">Email envoyé ✓</span>
-            ) : (
-              <button onClick={handleSendVerification} className="text-[10px] text-yellow-400 underline flex-shrink-0">Envoyer</button>
-            )}
-          </div>
-        )}
+  // Waze-style icon circle
+  const IC = ({ bg, children }: { bg: string; children: React.ReactNode }) => (
+    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${bg}`}>{children}</div>
+  );
 
-        {/* Header */}
-        <div className="bg-cali-card rounded-3xl p-5 border border-white/5 text-center">
-          <button onClick={() => setShowPhotoChoice(true)} className="relative w-20 h-20 rounded-full bg-gradient-to-br from-cali-red via-cali-orange to-cali-orange mx-auto flex items-center justify-center mb-3 overflow-hidden group">
-            {profilePhoto ? (
-              <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl">{profile.gender === 'female' ? '👩' : profile.gender === 'male' ? '👨' : '🧑'}</span>
-            )}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-              <Camera size={18} className="text-white" />
-            </div>
-          </button>
-          <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhoto} />
-          <input ref={profileCameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleProfilePhoto} />
-          {/* Photo choice popup */}
-          {showPhotoChoice && (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowPhotoChoice(false)}>
-              <div className="bg-cali-card rounded-3xl p-5 w-72 space-y-3 animate-slide-up" onClick={e => e.stopPropagation()}>
-                <p className="text-sm font-bold text-white text-center">Changer ta photo</p>
-                <button onClick={() => profileCameraRef.current?.click()}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-cali-red to-cali-orange text-white font-bold text-sm flex items-center justify-center gap-2">
-                  📸 Prendre une photo
-                </button>
-                <button onClick={() => profilePhotoRef.current?.click()}
-                  className="w-full py-3 rounded-2xl bg-cali-surface border border-white/10 text-cali-light-text font-bold text-sm flex items-center justify-center gap-2">
-                  🖼️ Choisir dans la galerie
-                </button>
-                <button onClick={() => setShowPhotoChoice(false)}
-                  className="w-full py-2 text-xs text-gray-500 text-center">
-                  Annuler
-                </button>
-              </div>
-            </div>
+  // Waze-style menu row
+  const Row = ({ onClick, icon, label, sub, last = false }: { onClick: () => void; icon: React.ReactNode; label: string; sub?: string; last?: boolean }) => (
+    <button onClick={onClick} className="w-full flex items-center gap-3.5 px-4 py-3.5 active:bg-white/5 transition-colors text-left">
+      {icon}
+      <div className="flex-1 min-w-0">
+        <p className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>{label}</p>
+        {sub && <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{sub}</p>}
+      </div>
+      <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
+      {!last && <span className="sr-only" />}
+    </button>
+  );
+
+  // Section list container
+  const Section = ({ title, children }: { title?: string; children: React.ReactNode }) => (
+    <div>
+      {title && <p className="text-[11px] font-bold uppercase tracking-widest px-4 pb-2 pt-1" style={{ color: 'var(--text-tertiary)' }}>{title}</p>}
+      <div style={{ background: 'var(--bg-card)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+        {children}
+      </div>
+    </div>
+  );
+
+  const Divider = () => <div className="ml-[70px] h-px" style={{ background: 'var(--border)' }} />;
+
+  return (
+    <div className="pb-24 page-enter" style={{ background: 'var(--bg)', minHeight: '100dvh' }}>
+
+      {/* Email non vérifié */}
+      {!emailVerified && (
+        <div className="mx-4 mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-xs text-yellow-400">Vérifie ton email pour sécuriser ton compte.</p>
+          {verificationSent ? (
+            <span className="text-[10px] text-yellow-600 flex-shrink-0">Email envoyé ✓</span>
+          ) : (
+            <button onClick={handleSendVerification} className="text-[10px] text-yellow-400 underline flex-shrink-0">Envoyer</button>
           )}
-          <h2 className="text-xl font-display font-bold text-white">{profile.name}</h2>
-          <div className="flex items-center justify-center gap-2 mt-1">
-            {isPremium && plan !== 'free' && <span className="bg-cali-orange/20 text-cali-orange px-2 py-0.5 rounded-full text-[10px] font-bold"><Crown size={10} className="inline mr-1" />Premium</span>}
-            <span className="text-xs text-gray-500">Niveau {level} · {xp} XP</span>
+        </div>
+      )}
+
+      {/* ── Hero profil ── */}
+      <div className="flex flex-col items-center pt-8 pb-6 px-4">
+        <button onClick={() => setShowPhotoChoice(true)} className="relative w-24 h-24 rounded-full mb-4 overflow-hidden group"
+          style={{ background: 'linear-gradient(135deg, #FF2D55, #FF6B35)' }}>
+          {profilePhoto
+            ? <img src={profilePhoto} alt="Profil" className="w-full h-full object-cover" />
+            : <span className="text-4xl">{profile.gender === 'male' ? '👨' : profile.gender === 'female' ? '👩' : '🧑'}</span>}
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-active:opacity-100 flex items-center justify-center transition-opacity">
+            <Camera size={20} className="text-white" />
           </div>
-          <div className="flex justify-center gap-4 mt-4">
-            <div className="text-center"><p className="text-lg font-bold text-cali-blue">{totalSessions}</p><p className="text-[10px] text-gray-500">Séances</p></div>
-            <div className="w-px bg-white/10" />
-            <div className="text-center"><p className="text-lg font-bold text-cali-green">{profile.weight} kg</p><p className="text-[10px] text-gray-500">Poids</p></div>
-            <div className="w-px bg-white/10" />
-            <div className="text-center"><p className="text-lg font-bold text-cali-purple">{profile.level === 'beginner' ? '🌱' : profile.level === 'intermediate' ? '⚡' : '🔥'}</p><p className="text-[10px] text-gray-500">Niveau</p></div>
-          </div>
+        </button>
+        <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhoto} />
+        <input ref={profileCameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleProfilePhoto} />
+
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{profile.name}</h1>
+        <div className="flex items-center gap-2 mt-1">
+          {isPremium && plan !== 'free' && (
+            <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+              style={{ background: 'rgba(255,107,53,0.15)', color: 'var(--brand-orange)' }}>
+              <Crown size={10} />Premium
+            </span>
+          )}
+          <span className="text-[13px]" style={{ color: 'var(--text-tertiary)' }}>Niv. {level} · {xp} XP</span>
         </div>
 
-        {/* Cycle Tracker (women only) */}
-        {profile.gender === 'female' && (
-          <div className="bg-cali-card rounded-2xl p-4 border border-white/5">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2"><Calendar size={16} className="text-pink-400" /><span className="text-sm font-bold text-white">Cycle menstruel</span></div>
-              <button onClick={() => setActiveModal('cycle')} className="text-xs text-cali-blue">Modifier</button>
-            </div>
-            {cycleEntries.length > 0 ? (
-              <div className="flex items-center gap-3">
-                <div className="bg-cali-surface rounded-xl px-3 py-2"><p className="text-lg font-bold text-pink-400">J{getCurrentCycleDay()}</p></div>
-                <div><p className="text-sm text-white">{phaseLabels[getCurrentCyclePhase()]}</p><p className="text-[10px] text-gray-500">Cycle de {cycleEntries[cycleEntries.length-1].cycleLength} jours</p></div>
-              </div>
-            ) : (
-              <p className="text-xs text-gray-500">Renseigne ton cycle pour adapter tes séances</p>
-            )}
-          </div>
-        )}
-
-        {/* Menu */}
-        <div className="space-y-2">
+        {/* Stats row */}
+        <div className="flex gap-6 mt-5">
           {[
-            { icon: User, label: 'Modifier le profil', action: () => setActiveModal('edit'), color: 'text-cali-blue', isPremiumItem: false },
-            { icon: HeartPulse, label: 'Blessures / Douleurs', action: () => setActiveModal('injuries'), color: 'text-cali-red', sub: profile.injuries.length > 0 ? `${profile.injuries.length} zone(s)` : 'Aucune', isPremiumItem: false },
-            { icon: Utensils, label: 'Préférences alimentaires', action: () => setActiveModal('diet'), color: 'text-cali-green', sub: profile.dietaryPrefs.length > 0 ? profile.dietaryPrefs.length + ' pref(s)' : 'Standard', isPremiumItem: false },
-            { icon: Bell, label: 'Notifications', action: () => setActiveModal('notif'), color: 'text-cali-orange', isPremiumItem: false },
-            { icon: TrendingUp, label: 'Progression', action: () => router.push('/progress'), color: 'text-cali-purple', isPremiumItem: false },
-            { icon: Crown, label: isPremium ? 'Gérer Premium' : 'Passer Premium', action: () => router.push('/premium'), color: 'text-cali-orange', isPremiumItem: true },
-          ].map(item => (
-            <button key={item.label} onClick={item.action}
-              className={`w-full rounded-2xl px-4 py-4 border flex items-center gap-3 active:scale-[0.99] ${
-                item.isPremiumItem
-                  ? 'bg-gradient-to-r from-cali-orange/10 to-cali-red/10 border-cali-orange/30'
-                  : 'bg-cali-card border-white/5 hover:border-white/10'
-              }`}>
-              <item.icon size={20} className={item.color} />
-              <div className="flex-1 text-left"><p className="text-sm text-white font-medium">{item.label}</p>{'sub' in item && item.sub && <p className="text-[10px] text-gray-500">{item.sub}</p>}</div>
-              <ChevronRight size={16} className={item.isPremiumItem ? 'text-cali-orange' : 'text-gray-600'} />
-            </button>
+            { val: totalSessions, label: 'Séances', color: '#00D4FF' },
+            { val: `${profile.weight}kg`, label: 'Poids', color: '#00FF87' },
+            { val: profile.height > 0 ? `${profile.height}cm` : '—', label: 'Taille', color: '#BF5AF2' },
+          ].map((s, i) => (
+            <div key={i} className="text-center">
+              <p className="text-[22px] font-bold" style={{ color: s.color }}>{s.val}</p>
+              <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{s.label}</p>
+            </div>
           ))}
         </div>
+      </div>
 
-        <div className="pt-4 border-t border-white/5">
-          <PrivacyBadge />
-
-          <div className="flex items-center justify-center gap-4 py-3">
-            <button onClick={() => openExternalLink('https://calibodi.com/terms')} className="text-[11px] text-gray-600 underline underline-offset-2">Conditions d&apos;utilisation</button>
-            <span className="text-gray-700 text-[11px]">·</span>
-            <button onClick={() => openExternalLink('https://calibodi.com/privacy')} className="text-[11px] text-gray-600 underline underline-offset-2">Politique de confidentialité</button>
+      {/* Photo choice popup */}
+      {showPhotoChoice && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowPhotoChoice(false)}>
+          <div className="w-72 rounded-3xl p-5 space-y-3 animate-slide-up" style={{ background: 'var(--bg-card)' }} onClick={e => e.stopPropagation()}>
+            <p className="text-sm font-bold text-center" style={{ color: 'var(--text-primary)' }}>Changer la photo</p>
+            <button onClick={() => profileCameraRef.current?.click()} className="w-full py-3 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2" style={{ background: 'var(--brand-gradient)' }}>
+              <Camera size={16} /> Prendre une photo
+            </button>
+            <button onClick={() => profilePhotoRef.current?.click()} className="w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
+              Choisir dans la galerie
+            </button>
+            <button onClick={() => setShowPhotoChoice(false)} className="w-full py-2 text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>Annuler</button>
           </div>
+        </div>
+      )}
 
-          {/* Promo code section */}
-          <div className="bg-cali-card border border-white/5 rounded-2xl p-4 mb-2 space-y-3">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Code promo</p>
+      {/* ── Sections style Waze ── */}
+      <div className="space-y-6 mt-2">
+
+        {/* Profil */}
+        <Section title="Profil">
+          <Row onClick={() => setActiveModal('edit')} last={false}
+            icon={<IC bg="bg-blue-500"><User size={18} className="text-white" /></IC>}
+            label="Modifier le profil" sub={`${profile.weight} kg · ${profile.height} cm`} />
+          <Divider />
+          <Row onClick={() => setActiveModal('injuries')}
+            icon={<IC bg="bg-rose-500"><HeartPulse size={18} className="text-white" /></IC>}
+            label="Blessures / Douleurs"
+            sub={profile.injuries.length > 0 ? `${profile.injuries.length} zone(s) renseignée(s)` : 'Aucune blessure'} />
+          <Divider />
+          <Row onClick={() => setActiveModal('diet')} last
+            icon={<IC bg="bg-green-500"><Utensils size={18} className="text-white" /></IC>}
+            label="Préférences alimentaires"
+            sub={profile.dietaryPrefs.length > 0 ? `${profile.dietaryPrefs.length} préférence(s)` : 'Standard'} />
+        </Section>
+
+        {/* Entraînement & suivi */}
+        <Section title="Entraînement">
+          <Row onClick={() => router.push('/progress')}
+            icon={<IC bg="bg-violet-500"><TrendingUp size={18} className="text-white" /></IC>}
+            label="Ma progression" sub="Poids, performances, historique" />
+          <Divider />
+          <Row onClick={() => router.push('/fitness')} last
+            icon={<IC bg="bg-orange-500"><Dumbbell size={18} className="text-white" /></IC>}
+            label="Programme fitness" sub={profile.level === 'beginner' ? 'Débutant' : profile.level === 'intermediate' ? 'Intermédiaire' : 'Avancé'} />
+        </Section>
+
+        {/* Préférences */}
+        <Section title="Préférences">
+          <Row onClick={() => setActiveModal('notif')}
+            icon={<IC bg="bg-amber-500"><Bell size={18} className="text-white" /></IC>}
+            label="Notifications" sub="Rappels hydratation, sommeil..." />
+          <Divider />
+          {/* Theme toggle */}
+          <div className="flex items-center gap-3.5 px-4 py-3.5">
+            <IC bg={theme === 'dark' ? 'bg-indigo-500' : 'bg-yellow-400'}>
+              {theme === 'dark' ? <Moon size={18} className="text-white" /> : <Sun size={18} className="text-white" />}
+            </IC>
+            <div className="flex-1">
+              <p className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {theme === 'dark' ? 'Mode sombre' : 'Mode clair'}
+              </p>
+              <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>Apparence de l&apos;application</p>
+            </div>
+            <button onClick={toggleTheme}
+              className="w-12 h-7 rounded-full transition-all flex items-center relative"
+              style={{ background: theme === 'dark' ? '#6366F1' : 'var(--border-strong)' }}>
+              <div className={`w-5 h-5 rounded-full bg-white absolute transition-all ${theme === 'dark' ? 'left-6' : 'left-1'}`} />
+            </button>
+          </div>
+        </Section>
+
+        {/* Premium */}
+        {(!isPremium || plan === 'free') && (
+          <Section title="Abonnement">
+            <Row onClick={() => router.push('/premium')}
+              icon={<div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-gradient)' }}><Crown size={18} className="text-white" /></div>}
+              label="Passer Premium" sub="Accès illimité à toutes les fonctionnalités" last />
+          </Section>
+        )}
+        {isPremium && plan !== 'free' && (
+          <Section title="Abonnement">
+            <Row onClick={() => router.push('/premium')}
+              icon={<div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--brand-gradient)' }}><Crown size={18} className="text-white" /></div>}
+              label="Gérer mon abonnement" sub="Premium actif" last />
+          </Section>
+        )}
+
+        {/* Code promo */}
+        <Section title="Code promo">
+          <div className="px-4 py-4">
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={e => setPromoCode(e.target.value.toUpperCase())}
+              <input type="text" value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())}
                 placeholder="CAL-XXXXXXXX"
-                className="flex-1 bg-cali-surface rounded-xl px-4 py-2.5 text-white text-sm border border-white/5 focus:border-cali-orange/40 focus:outline-none font-mono"
-              />
-              <button
-                onClick={handleRedeemPromo}
-                disabled={promoLoading || !promoCode.trim()}
-                className="px-4 py-2.5 rounded-xl bg-cali-orange text-white text-sm font-bold disabled:opacity-50"
-              >
+                className="flex-1 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none"
+                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
+              <button onClick={handleRedeemPromo} disabled={promoLoading || !promoCode.trim()}
+                className="px-4 py-2.5 rounded-xl text-white text-sm font-bold disabled:opacity-50"
+                style={{ background: 'var(--brand-gradient)' }}>
                 {promoLoading ? '...' : 'Activer'}
               </button>
             </div>
-            {promoMsg && (
-              <p className={`text-xs ${promoMsg.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{promoMsg.text}</p>
-            )}
+            {promoMsg && <p className={`text-xs mt-2 ${promoMsg.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{promoMsg.text}</p>}
           </div>
+        </Section>
 
-          {/* Admin panel — only for admin email */}
-          {isAdmin && (
-            <div className="bg-cali-card border border-cali-orange/20 rounded-2xl p-4 mb-2 space-y-3">
-              <p className="text-xs font-semibold text-cali-orange uppercase tracking-wider">Générer un code promo (admin)</p>
+        {/* Admin */}
+        {isAdmin && (
+          <Section title="Admin">
+            <div className="px-4 py-4 space-y-3">
               <div className="flex gap-2">
                 {[30, 60, 90, 365].map(d => (
                   <button key={d} onClick={() => setAdminDuration(d)}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-colors ${adminDuration === d ? 'bg-cali-orange border-cali-orange text-white' : 'bg-transparent border-white/10 text-gray-400'}`}>
+                    className="flex-1 py-2 rounded-xl text-xs font-bold border transition-colors"
+                    style={adminDuration === d ? { background: 'var(--brand-orange)', borderColor: 'var(--brand-orange)', color: '#fff' } : { background: 'transparent', borderColor: 'var(--border)', color: 'var(--text-tertiary)' }}>
                     {d === 365 ? '1 an' : `${d}j`}
                   </button>
                 ))}
               </div>
-              <button
-                onClick={handleGenerateCode}
-                disabled={adminLoading}
-                className="w-full py-2.5 rounded-xl bg-cali-orange/20 border border-cali-orange/40 text-cali-orange text-sm font-bold disabled:opacity-50"
-              >
+              <button onClick={handleGenerateCode} disabled={adminLoading}
+                className="w-full py-2.5 rounded-xl text-sm font-bold disabled:opacity-50"
+                style={{ background: 'rgba(255,107,53,0.15)', border: '1px solid rgba(255,107,53,0.3)', color: 'var(--brand-orange)' }}>
                 {adminLoading ? 'Génération...' : `Générer code ${adminDuration} jours`}
               </button>
               {generatedCode && (
-                <div className="bg-cali-surface rounded-xl p-3 flex items-center justify-between gap-2">
-                  <span className="font-mono text-white text-sm">{generatedCode}</span>
-                  <button onClick={() => { navigator.clipboard?.writeText(generatedCode); }}
-                    className="text-xs text-cali-orange font-bold">Copier</button>
+                <div className="rounded-xl p-3 flex items-center justify-between gap-2" style={{ background: 'var(--bg-surface)' }}>
+                  <span className="font-mono text-sm" style={{ color: 'var(--text-primary)' }}>{generatedCode}</span>
+                  <button onClick={() => navigator.clipboard?.writeText(generatedCode)} className="text-xs font-bold" style={{ color: 'var(--brand-orange)' }}>Copier</button>
                 </div>
               )}
             </div>
-          )}
+          </Section>
+        )}
 
-          <button onClick={handleReset} className="w-full bg-cali-red/10 border border-cali-red/20 rounded-2xl px-4 py-3 flex items-center gap-3 text-cali-red">
-            <LogOut size={18} /><span className="text-sm font-medium">Réinitialiser les données</span></button>
+        {/* Cycle (femme) */}
+        {profile.gender === 'female' && (
+          <Section title="Santé">
+            <Row onClick={() => setActiveModal('cycle')} last
+              icon={<IC bg="bg-pink-500"><Calendar size={18} className="text-white" /></IC>}
+              label="Cycle menstruel"
+              sub={cycleEntries.length > 0 ? `J${getCurrentCycleDay()} — ${phaseLabels[getCurrentCyclePhase()]}` : 'Non renseigné'} />
+          </Section>
+        )}
 
-          <button onClick={() => setShowDeleteConfirm(true)} className="w-full mt-2 bg-transparent border border-red-900/40 rounded-2xl px-4 py-3 flex items-center gap-3 text-red-700 hover:bg-red-950/20">
-            <Trash2 size={18} /><span className="text-sm font-medium">Supprimer mon compte</span></button>
+        {/* Liens légaux */}
+        <div className="px-4">
+          <PrivacyBadge />
+          <div className="flex items-center justify-center gap-4 py-2">
+            <button onClick={() => openExternalLink('https://calibodi.com/terms')} className="text-[11px] underline underline-offset-2" style={{ color: 'var(--text-tertiary)' }}>Conditions d&apos;utilisation</button>
+            <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>·</span>
+            <button onClick={() => openExternalLink('https://calibodi.com/privacy')} className="text-[11px] underline underline-offset-2" style={{ color: 'var(--text-tertiary)' }}>Confidentialité</button>
+          </div>
         </div>
 
-        {/* Delete Account Confirmation Modal */}
-        {showDeleteConfirm && (
+        {/* Danger zone */}
+        <Section>
+          <Row onClick={handleReset}
+            icon={<IC bg="bg-red-500"><LogOut size={18} className="text-white" /></IC>}
+            label="Réinitialiser les données" />
+          <Divider />
+          <Row onClick={() => setShowDeleteConfirm(true)} last
+            icon={<IC bg="bg-gray-700"><Trash2 size={18} className="text-white" /></IC>}
+            label="Supprimer mon compte" />
+        </Section>
+
+      </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirm && (
           <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}>
             <div className="w-full max-w-lg bg-cali-card rounded-t-3xl p-6 space-y-4 animate-slide-up" style={{paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 5rem))'}} onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-3">
@@ -415,7 +496,6 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-      </div>
 
       {/* Edit Modal */}
       {activeModal === 'edit' && (

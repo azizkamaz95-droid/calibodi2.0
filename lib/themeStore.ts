@@ -1,39 +1,25 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
 export type AppTheme = 'dark' | 'light';
 
 interface ThemeState {
   theme: AppTheme;
   setTheme: (t: AppTheme) => void;
-  toggleTheme: () => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       theme: 'dark',
-      setTheme: (theme) => {
-        set({ theme });
-        applyTheme(theme);
-      },
-      toggleTheme: () => {
-        const next = get().theme === 'dark' ? 'light' : 'dark';
-        set({ theme: next });
-        applyTheme(next);
-      },
+      setTheme: (theme) => set({ theme }),
     }),
-    {
-      name: 'calibodi-theme',
-      storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        if (state) applyTheme(state.theme);
-      },
-    }
+    { name: 'calibodi-theme' }
   )
 );
 
 export function applyTheme(theme: AppTheme) {
-  if (typeof document === 'undefined') return;
-  document.documentElement.setAttribute('data-theme', theme);
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
 }
