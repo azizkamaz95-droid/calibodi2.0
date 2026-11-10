@@ -6,12 +6,12 @@ import { getAnalytics, isSupported, logEvent as fbLogEvent } from 'firebase/anal
 import type { Analytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyC7590ljHdMhjYdGSUQEZdjSh4bR54tfLI',
-  authDomain: 'calibodi-v3.firebaseapp.com',
-  projectId: 'calibodi-v3',
-  storageBucket: 'calibodi-v3.firebasestorage.app',
-  messagingSenderId: '647417621484',
-  appId: '1:647417621484:web:de5d361935ccddaffb2ec9',
+  apiKey: 'AIzaSyAM9grY5RfdPJisaD4jEMFO5jEpHpTQZzc',
+  authDomain: 'calibodi-v2.firebaseapp.com',
+  projectId: 'calibodi-v2',
+  storageBucket: 'calibodi-v2.firebasestorage.app',
+  messagingSenderId: '428936689872',
+  appId: '1:428936689872:web:089b54abc7c569c669c6d5',
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
