@@ -41,7 +41,7 @@ function FlipCard({ tip }: { tip: RecoveryTip }) {
               <p className="text-xs font-bold text-white">{tip.title}</p>
               <p className="text-[10px] mt-0.5" style={{ color }}>{catLabels[tip.category]}</p>
             </div>
-            <div className="text-[10px] text-cali-light-text bg-cali-surface px-2 py-1 rounded-lg animate-pulse">
+            <div className="text-[10px] text-secondary bg-theme-surface px-2 py-1 rounded-lg animate-pulse">
               Tap 👆
             </div>
           </div>
@@ -56,7 +56,7 @@ function FlipCard({ tip }: { tip: RecoveryTip }) {
               <p className="text-[11px] leading-relaxed" style={{ color: '#e0e0e0' }}>{tip.fact}</p>
             </div>
           </div>
-          <p className="text-[9px] text-cali-light-text text-right mt-2 opacity-50">Tap pour fermer</p>
+          <p className="text-[9px] text-secondary text-right mt-2 opacity-50">Tap pour fermer</p>
         </div>
       )}
     </div>
@@ -130,7 +130,7 @@ export default function SleepPage() {
       <div className="relative z-10 p-5 space-y-5">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-display font-black text-white">Récupération</h1>
-          <div className="flex items-center gap-1.5 bg-cali-surface rounded-xl px-2.5 py-1">
+          <div className="flex items-center gap-1.5 bg-theme-surface rounded-xl px-2.5 py-1">
             <Moon size={14} className="text-cali-purple" />
             <span className="text-xs font-bold text-white">{streak} nuits</span>
           </div>
@@ -140,20 +140,20 @@ export default function SleepPage() {
 
         {/* Score Cards */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-cali-card rounded-2xl p-4 border border-white/5 text-center">
+          <div className="bg-theme-card rounded-2xl p-4 border border-theme text-center">
             <Moon size={18} className="text-cali-purple mx-auto mb-2" />
             <p className={`text-2xl font-bold ${scoreColor}`}>{latestScore}</p>
-            <p className="text-[10px] text-gray-500">Score nuit</p>
+            <p className="text-[10px] text-tertiary">Score nuit</p>
           </div>
-          <div className="bg-cali-card rounded-2xl p-4 border border-white/5 text-center">
+          <div className="bg-theme-card rounded-2xl p-4 border border-theme text-center">
             <Battery size={18} className="text-cali-green mx-auto mb-2" />
             <p className="text-2xl font-bold text-cali-green">{recoveryScore}</p>
-            <p className="text-[10px] text-gray-500">Récupération</p>
+            <p className="text-[10px] text-tertiary">Récupération</p>
           </div>
-          <div className="bg-cali-card rounded-2xl p-4 border border-white/5 text-center">
+          <div className="bg-theme-card rounded-2xl p-4 border border-theme text-center">
             <AlertTriangle size={18} className="text-cali-orange mx-auto mb-2" />
             <p className="text-2xl font-bold text-cali-orange">{sleepDebt}h</p>
-            <p className="text-[10px] text-gray-500">Dette</p>
+            <p className="text-[10px] text-tertiary">Dette</p>
           </div>
         </div>
 
@@ -174,12 +174,12 @@ export default function SleepPage() {
           </button>
           {canAccessRecovery ? (
             <button onClick={() => setShowNap(true)}
-              className="py-4 rounded-2xl bg-cali-surface border border-cali-purple/30 text-cali-purple font-display font-bold">
+              className="py-4 rounded-2xl bg-theme-surface border border-cali-purple/30 text-cali-purple font-display font-bold">
               ☀️ Sieste
             </button>
           ) : (
             <PremiumLock feature="recovery_advanced" compact message="Sieste disponible en Premium">
-              <div className="py-4 rounded-2xl bg-cali-surface border border-cali-purple/30 text-cali-purple font-display font-bold text-center text-sm">
+              <div className="py-4 rounded-2xl bg-theme-surface border border-cali-purple/30 text-cali-purple font-display font-bold text-center text-sm">
                 ☀️ Sieste
               </div>
             </PremiumLock>
@@ -191,15 +191,15 @@ export default function SleepPage() {
           const habitAdvice = getSleepHabitAdvice(entries as any[]);
           if (habitAdvice.length === 0) return null;
           return (
-            <div className="bg-cali-card rounded-2xl p-4 border border-purple-500/20 space-y-3">
+            <div className="bg-theme-card rounded-2xl p-4 border border-purple-500/20 space-y-3">
               <p className="text-sm font-bold text-white">🔍 Analyse de tes habitudes</p>
               {habitAdvice.map((advice, i) => (
-                <div key={i} className="bg-cali-surface rounded-xl p-3 border border-white/5">
+                <div key={i} className="bg-theme-surface rounded-xl p-3 border border-theme">
                   <div className="flex items-center gap-2 mb-1">
                     <span>{advice.icon}</span>
                     <p className="text-xs font-bold text-white">{advice.title}</p>
                   </div>
-                  <p className="text-[11px] text-gray-400 mb-2">{advice.message}</p>
+                  <p className="text-[11px] text-tertiary mb-2">{advice.message}</p>
                   <p className="text-[11px] text-purple-300 font-medium">💜 {advice.action}</p>
                 </div>
               ))}
@@ -209,7 +209,7 @@ export default function SleepPage() {
 
         {/* Sleep Coaching Tips — Dynamic cards */}
         {canAccessRecovery ? (
-        <div className="bg-cali-card rounded-2xl p-4 border border-white/5">
+        <div className="bg-theme-card rounded-2xl p-4 border border-theme">
           <p className="text-sm font-bold text-white mb-3">🧠 Savais-tu ?</p>
           <div className="space-y-3">
             {/* Tip of the day — Card flip */}
@@ -228,18 +228,18 @@ export default function SleepPage() {
               ));
             })()}
           </div>
-          <p className="text-[10px] text-cali-light-text text-center mt-3 opacity-60">
+          <p className="text-[10px] text-secondary text-center mt-3 opacity-60">
             Nouveau conseil chaque jour
           </p>
         </div>
         ) : (
           <PremiumLock feature="recovery_advanced" message="Débloque les conseils sommeil, la sieste et le score de récupération avancé">
-            <div className="bg-cali-card rounded-2xl p-4 border border-white/5">
+            <div className="bg-theme-card rounded-2xl p-4 border border-theme">
               <p className="text-sm font-bold text-white mb-3">🧠 Conseils sommeil</p>
               <div className="space-y-2">
-                <div className="bg-cali-surface rounded-xl p-3 h-12" />
-                <div className="bg-cali-surface rounded-xl p-3 h-12" />
-                <div className="bg-cali-surface rounded-xl p-3 h-12" />
+                <div className="bg-theme-surface rounded-xl p-3 h-12" />
+                <div className="bg-theme-surface rounded-xl p-3 h-12" />
+                <div className="bg-theme-surface rounded-xl p-3 h-12" />
               </div>
             </div>
           </PremiumLock>
@@ -248,20 +248,20 @@ export default function SleepPage() {
         {/* History */}
         {entries.length > 0 && (
           <div>
-            <p className="text-xs text-gray-500 mb-3 font-medium">DERNIÈRES NUITS</p>
+            <p className="text-xs text-tertiary mb-3 font-medium">DERNIÈRES NUITS</p>
             <div className="space-y-2">
               {[...entries].reverse().slice(0, 7).map((entry, i) => {
                 const hours = Math.round(entry.duration / 60 * 10) / 10;
                 const sc = entry.score >= 80 ? 'text-cali-green' : entry.score >= 55 ? 'text-cali-orange' : 'text-cali-red';
                 const isNap = (entry as any).isNap;
                 return (
-                  <div key={i} className="bg-cali-card rounded-xl px-4 py-3 border border-white/5 flex items-center justify-between gap-2">
+                  <div key={i} className="bg-theme-card rounded-xl px-4 py-3 border border-theme flex items-center justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm">{isNap ? '☀️' : '🌙'}</span>
                         <p className="text-sm text-white font-medium">{entry.date}</p>
                       </div>
-                      <p className="text-[10px] text-gray-500">
+                      <p className="text-[10px] text-tertiary">
                         {isNap ? `Sieste ${entry.duration} min` : `${entry.bedTime} → ${entry.wakeTime} · ${hours}h · ${'⭐'.repeat(entry.quality)}`}
                       </p>
                     </div>
@@ -279,7 +279,7 @@ export default function SleepPage() {
                           removeEntry(entry.date);
                           setShowLog(true);
                         }
-                      }} className="w-7 h-7 rounded-lg bg-cali-surface flex items-center justify-center active:scale-90">
+                      }} className="w-7 h-7 rounded-lg bg-theme-surface flex items-center justify-center active:scale-90">
                         <PenLine size={12} className="text-cali-orange" />
                       </button>
                       <button onClick={() => {
@@ -299,19 +299,19 @@ export default function SleepPage() {
       {/* Log Modal */}
       {showLog && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowLog(false)}>
-          <div className="w-full max-w-lg bg-cali-card rounded-t-3xl p-5 animate-slide-up space-y-5" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-lg bg-theme-card rounded-t-3xl p-5 animate-slide-up space-y-5" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-display font-bold text-white text-center">Logger ma nuit</h3>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-cali-surface rounded-2xl p-4 text-center">
+              <div className="bg-theme-surface rounded-2xl p-4 text-center">
                 <Moon size={18} className="text-cali-purple mx-auto mb-2" />
-                <p className="text-xs text-gray-500 mb-1">Coucher</p>
+                <p className="text-xs text-tertiary mb-1">Coucher</p>
                 <input type="time" value={bedTime} onChange={(e) => setBedTime(e.target.value)}
                   className="bg-transparent text-white text-lg font-bold text-center w-full focus:outline-none" />
               </div>
-              <div className="bg-cali-surface rounded-2xl p-4 text-center">
+              <div className="bg-theme-surface rounded-2xl p-4 text-center">
                 <Sun size={18} className="text-cali-orange mx-auto mb-2" />
-                <p className="text-xs text-gray-500 mb-1">Réveil</p>
+                <p className="text-xs text-tertiary mb-1">Réveil</p>
                 <input type="time" value={wakeTime} onChange={(e) => setWakeTime(e.target.value)}
                   className="bg-transparent text-white text-lg font-bold text-center w-full focus:outline-none" />
               </div>
@@ -323,12 +323,12 @@ export default function SleepPage() {
             </div>
 
             <div>
-              <p className="text-sm text-gray-400 text-center mb-3">Qualité du sommeil</p>
+              <p className="text-sm text-tertiary text-center mb-3">Qualité du sommeil</p>
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map((q) => (
                   <button key={q} onClick={() => setQuality(q)}
                     className={`w-12 h-12 rounded-xl text-lg transition-all ${
-                      quality >= q ? 'bg-cali-purple/20 border border-cali-purple/40' : 'bg-cali-surface border border-white/5'
+                      quality >= q ? 'bg-cali-purple/20 border border-cali-purple/40' : 'bg-theme-surface border border-theme'
                     }`}>
                     {quality >= q ? '⭐' : '☆'}
                   </button>
@@ -347,15 +347,15 @@ export default function SleepPage() {
       {/* Nap Modal */}
       {showNap && (
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowNap(false)}>
-          <div className="w-full max-w-lg bg-cali-card rounded-t-3xl p-5 animate-slide-up space-y-5" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-lg bg-theme-card rounded-t-3xl p-5 animate-slide-up space-y-5" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-display font-bold text-white text-center">☀️ Logger une sieste</h3>
-            <div className="bg-cali-surface rounded-2xl p-4 text-center">
-              <p className="text-xs text-gray-500 mb-2">Durée de la sieste</p>
+            <div className="bg-theme-surface rounded-2xl p-4 text-center">
+              <p className="text-xs text-tertiary mb-2">Durée de la sieste</p>
               <p className="text-4xl font-display font-black text-cali-purple">{napDuration} min</p>
               <input type="range" min="5" max="120" step="5" value={napDuration} onChange={e => setNapDuration(Number(e.target.value))} className="w-full accent-cali-purple mt-3" />
               <div className="flex justify-between mt-1">
                 {[10, 20, 30, 45, 60].map(d => (
-                  <button key={d} onClick={() => setNapDuration(d)} className={`text-[10px] px-2 py-1 rounded-lg ${napDuration === d ? 'bg-cali-purple/20 text-cali-purple' : 'text-gray-600'}`}>{d}min</button>
+                  <button key={d} onClick={() => setNapDuration(d)} className={`text-[10px] px-2 py-1 rounded-lg ${napDuration === d ? 'bg-cali-purple/20 text-cali-purple' : 'text-tertiary'}`}>{d}min</button>
                 ))}
               </div>
             </div>

@@ -69,7 +69,7 @@ export default function HydrationPage() {
       <div className="p-5 space-y-5">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-display font-black text-white">Hydratation</h1>
-          <div className="flex items-center gap-1.5 bg-cali-surface rounded-xl px-2.5 py-1">
+          <div className="flex items-center gap-1.5 bg-theme-surface rounded-xl px-2.5 py-1">
             <Flame size={14} className="text-cali-blue" />
             <span className="text-xs font-bold text-white">{streak}j</span>
           </div>
@@ -78,7 +78,7 @@ export default function HydrationPage() {
         <CalixCoach message={calixMsg} type={progress >= 100 ? 'success' : 'info'} />
 
         {/* Progress Ring */}
-        <div className="bg-cali-card rounded-3xl p-6 border border-white/5 flex flex-col items-center">
+        <div className="bg-theme-card rounded-3xl p-6 border border-theme flex flex-col items-center">
           <div className="relative">
             <svg width="200" height="200" viewBox="0 0 200 200" className="transform -rotate-90">
               <circle cx="100" cy="100" r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
@@ -90,10 +90,10 @@ export default function HydrationPage() {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <Droplets size={24} className="text-cali-blue mb-1" />
               <p className="text-3xl font-display font-black text-white">{consumed}</p>
-              <p className="text-xs text-gray-500">/ {dailyGoal} ml</p>
+              <p className="text-xs text-tertiary">/ {dailyGoal} ml</p>
             </div>
           </div>
-          <p className="text-sm text-gray-400 mt-3">{progress}% · Reste {remaining} ml</p>
+          <p className="text-sm text-tertiary mt-3">{progress}% · Reste {remaining} ml</p>
         </div>
 
         {/* Session Bonus Notice */}
@@ -107,13 +107,13 @@ export default function HydrationPage() {
 
         {/* Quick Add Buttons */}
         <div>
-          <p className="text-xs text-gray-500 mb-3 font-medium">AJOUTER RAPIDEMENT</p>
+          <p className="text-xs text-tertiary mb-3 font-medium">AJOUTER RAPIDEMENT</p>
           <div className="grid grid-cols-2 gap-2">
             {QUICK_ADD.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleAddWater(item.amount)}
-                className="bg-cali-card rounded-2xl p-4 border border-white/5 flex items-center gap-3 transition-all hover:border-cali-blue/30 active:scale-[0.97]"
+                className="bg-theme-card rounded-2xl p-4 border border-theme flex items-center gap-3 transition-all hover:border-cali-blue/30 active:scale-[0.97]"
               >
                 <span className="text-2xl">{item.label.split(' ')[0]}</span>
                 <div className="text-left">
@@ -129,9 +129,9 @@ export default function HydrationPage() {
         <div className="flex gap-2">
           {[100, 200, 300, 500].map((ml) => (
             <button key={ml} onClick={() => handleAddWater(ml)}
-              className="flex-1 py-3 rounded-xl bg-cali-surface border border-white/5 text-center transition-all hover:border-cali-blue/30 active:scale-[0.95]">
+              className="flex-1 py-3 rounded-xl bg-theme-surface border border-theme text-center transition-all hover:border-cali-blue/30 active:scale-[0.95]">
               <p className="text-sm font-bold text-cali-blue">+{ml}</p>
-              <p className="text-[10px] text-gray-600">ml</p>
+              <p className="text-[10px] text-tertiary">ml</p>
             </button>
           ))}
         </div>
@@ -139,11 +139,11 @@ export default function HydrationPage() {
         {/* Today Log */}
         {entries.length > 0 && (
           <div>
-            <p className="text-xs text-gray-500 mb-2 font-medium">HISTORIQUE DU JOUR</p>
+            <p className="text-xs text-tertiary mb-2 font-medium">HISTORIQUE DU JOUR</p>
             <div className="space-y-1.5 max-h-40 overflow-y-auto">
               {[...entries].reverse().map((entry, i) => (
-                <div key={i} className="flex justify-between items-center bg-cali-surface rounded-xl px-3 py-2">
-                  <span className="text-xs text-gray-400">
+                <div key={i} className="flex justify-between items-center bg-theme-surface rounded-xl px-3 py-2">
+                  <span className="text-xs text-tertiary">
                     {new Date(entry.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                   <span className="text-sm text-cali-blue font-medium">+{entry.amount} ml</span>
