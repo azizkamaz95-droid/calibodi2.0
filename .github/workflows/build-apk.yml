@@ -107,15 +107,15 @@ jobs:
 
       - name: Patch MainActivity — audio autoplay + remove WebView UA marker
         run: |
-          MAIN="android/app/src/main/java/com/calibodi/app/MainActivity.java"
-          if [ ! -f "$MAIN" ]; then echo "MainActivity.java non trouvé, skip"; exit 0; fi
-          # Capacitor generates an empty class: public class MainActivity extends BridgeActivity {}
+          # App ID is com.calibodi.two → path uses "two" not "app"
+          MAIN="android/app/src/main/java/com/calibodi/two/MainActivity.java"
+          if [ ! -f "$MAIN" ]; then echo "MainActivity.java non trouvé à $MAIN, skip"; exit 0; fi
           # We replace the empty body with an onCreate override that:
           #  1. removes "wv" from user-agent (Firebase blocks signInWithRedirect in WebViews)
           #  2. disables media-playback user-gesture requirement (Google TTS audio.play())
           python3 << 'PYEOF'
           import re
-          with open('android/app/src/main/java/com/calibodi/app/MainActivity.java', 'r') as f:
+          with open('android/app/src/main/java/com/calibodi/two/MainActivity.java', 'r') as f:
               src = f.read()
 
           # Add imports if missing
@@ -155,7 +155,7 @@ jobs:
               if src.endswith('}'):
                   src = src[:-1] + on_create + '\n}'
 
-          with open('android/app/src/main/java/com/calibodi/app/MainActivity.java', 'w') as f:
+          with open('android/app/src/main/java/com/calibodi/two/MainActivity.java', 'w') as f:
               f.write(src)
           print('✓ MainActivity.java patché')
           PYEOF
