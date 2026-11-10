@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import LayoutBackground from '@/components/LayoutBackground';
 import SwipeNavigation from '@/components/SwipeNavigation';
 import AudioUnlock from '@/components/AudioUnlock';
+import ThemeProvider from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'CaliBodi — Ton coaching fitness intelligent',
@@ -27,8 +28,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body className="bg-cali-dark min-h-dvh">
+    <html lang="fr" data-theme="dark">
+      <body className="min-h-dvh" style={{ background: 'var(--bg)', color: 'var(--text-primary)' }}>
+        <ThemeProvider />
         <AudioUnlock />
         <BackButtonHandler />
         <IOSPremiumUnlock />

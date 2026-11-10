@@ -339,27 +339,35 @@ export default function OnboardingPage() {
   /* ─── Email verification screen ───────────────────────────────────────── */
   if (waitingVerification) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center p-6 text-center gap-6 bg-cali-dark">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cali-orange/20 to-cali-red/10 border border-cali-orange/30 flex items-center justify-center text-4xl">
-          📧
+      <div className="min-h-dvh flex flex-col items-center justify-center p-6 text-center gap-6" style={{ background: 'var(--bg)' }}>
+        {/* Icon */}
+        <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg,rgba(255,107,53,0.15),rgba(255,45,85,0.1))', border: '1.5px solid rgba(255,107,53,0.3)', boxShadow: '0 0 40px rgba(255,107,53,0.15)' }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#ev)" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+            <defs><linearGradient id="ev" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#FF6B35"/><stop offset="100%" stopColor="#FF2D55"/>
+            </linearGradient></defs>
+          </svg>
         </div>
         <div>
-          <h2 className="text-2xl font-display font-black text-white mb-2">Vérifie ton email</h2>
-          <p className="text-gray-400 text-sm leading-relaxed">
+          <h2 className="text-2xl font-black mb-2" style={{ color: 'var(--text-primary)' }}>Vérifie ton email</h2>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             Un lien de vérification a été envoyé à<br/>
-            <span className="text-white font-semibold">{email}</span>
+            <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{email}</span>
           </p>
         </div>
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl px-4 py-3">
-          <p className="text-yellow-500/80 text-xs">📌 Vérifie ton dossier spam si tu ne vois pas le mail</p>
+        <div className="rounded-2xl px-4 py-3 w-full" style={{ background: 'rgba(255,200,0,0.06)', border: '1px solid rgba(255,200,0,0.2)' }}>
+          <p className="text-xs" style={{ color: 'rgba(255,200,0,0.8)' }}>Vérifie ton dossier spam si tu ne vois pas le mail</p>
         </div>
         <div className="w-full space-y-3">
           <button onClick={handleCheckVerification} disabled={checkingVerification}
-            className="w-full py-4 rounded-2xl font-display font-bold text-sm bg-gradient-to-r from-cali-red to-cali-orange text-white active:opacity-80">
-            {checkingVerification ? 'Vérification...' : "J'ai cliqué sur le lien ✓"}
+            className="w-full py-4 rounded-2xl font-bold text-sm text-white active:opacity-80 cb-btn-primary">
+            {checkingVerification ? 'Vérification...' : "J'ai cliqué sur le lien"}
           </button>
           <button onClick={() => sendEmailVerification(auth.currentUser!).catch(() => {})}
-            className="text-xs text-gray-500 w-full">
+            className="text-xs w-full" style={{ color: 'var(--text-tertiary)' }}>
             Renvoyer le mail
           </button>
         </div>
@@ -368,11 +376,25 @@ export default function OnboardingPage() {
   }
 
   /* ─── Step content ─────────────────────────────────────────────────────── */
+
+  // Photo cards — place your own photos in /public/onboarding/
+  // Names: welcome.jpg, weight_loss.jpg, muscle.jpg, endurance.jpg, health.jpg,
+  //        beginner.jpg, advanced.jpg, nutrition.jpg, summary.jpg
+  const PHOTO = (name: string) => `/onboarding/${name}.jpg`;
+
+  // Gradient fallbacks shown when photo isn't present yet
+  const GOAL_GRADIENTS: Record<string, string> = {
+    weight_loss: 'linear-gradient(135deg, #1a0a00 0%, #3d1500 50%, #FF4500 100%)',
+    muscle:      'linear-gradient(135deg, #000d1a 0%, #001433 50%, #0057FF 100%)',
+    endurance:   'linear-gradient(135deg, #001a0d 0%, #003320 50%, #00C853 100%)',
+    health:      'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #8B2FC9 100%)',
+  };
+
   const GOAL_CONFIG = {
-    weight_loss: { icon: '🔥', label: 'Perte de poids', desc: 'Brûler les graisses durablement', color: 'from-orange-500/20 to-red-500/10', border: 'border-orange-500/40', text: 'text-orange-400' },
-    muscle:      { icon: '💪', label: 'Prise de muscle', desc: 'Sculpter et renforcer le corps', color: 'from-blue-500/20 to-purple-500/10', border: 'border-blue-500/40', text: 'text-blue-400' },
-    endurance:   { icon: '🏃', label: 'Endurance', desc: 'Cardio et résistance maximale', color: 'from-green-500/20 to-teal-500/10', border: 'border-green-500/40', text: 'text-green-400' },
-    health:      { icon: '💚', label: 'Santé générale', desc: 'Retrouver une hygiène de vie', color: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/40', text: 'text-emerald-400' },
+    weight_loss: { photo: PHOTO('weight_loss'), gradient: GOAL_GRADIENTS.weight_loss,  accent: '#FF6B35', label: 'Perte de poids',  desc: 'Brûler les graisses durablement',  color: 'from-orange-500/20 to-red-500/10',     border: 'border-orange-500/40', text: 'text-orange-400' },
+    muscle:      { photo: PHOTO('muscle'),      gradient: GOAL_GRADIENTS.muscle,       accent: '#3B82F6', label: 'Prise de muscle', desc: 'Sculpter et renforcer le corps',    color: 'from-blue-500/20 to-purple-500/10',    border: 'border-blue-500/40',   text: 'text-blue-400'   },
+    endurance:   { photo: PHOTO('endurance'),   gradient: GOAL_GRADIENTS.endurance,    accent: '#00C853', label: 'Endurance',       desc: 'Cardio et résistance maximale',     color: 'from-green-500/20 to-teal-500/10',     border: 'border-green-500/40',  text: 'text-green-400'  },
+    health:      { photo: PHOTO('health'),      gradient: GOAL_GRADIENTS.health,       accent: '#BF5AF2', label: 'Santé générale',  desc: 'Retrouver une hygiène de vie',      color: 'from-emerald-500/20 to-green-500/10',  border: 'border-emerald-500/40',text: 'text-emerald-400'},
   };
 
   const renderStep = () => {
@@ -380,55 +402,60 @@ export default function OnboardingPage() {
       /* ── 0 Welcome ────────────────────────────────────────────────────── */
       case 0:
         return (
-          <div className="flex flex-col items-center justify-between h-full text-center px-4 py-6">
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              {/* Animated logo */}
-              <div className="relative">
-                <div className="absolute -inset-8 rounded-full opacity-30 animate-pulse-glow"
-                  style={{ background: 'radial-gradient(circle, rgba(255,107,53,0.4) 0%, transparent 70%)' }} />
-                <div className="relative w-28 h-28 rounded-full flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f18 100%)', border: '1px solid rgba(255,107,53,0.2)', boxShadow: '0 0 40px rgba(255,107,53,0.15)' }}>
-                  {/* CaliBodi C logo */}
-                  <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+          <div className="flex flex-col h-full -mx-5 -mt-5">
+            {/* Hero photo */}
+            <div className="relative h-[52vh] flex-shrink-0 overflow-hidden" style={{ borderRadius: '0 0 36px 36px' }}>
+              <img src={PHOTO('welcome')} alt="" className="w-full h-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(8,8,14,0.2) 0%, rgba(8,8,14,0.0) 40%, rgba(8,8,14,0.95) 100%)' }} />
+              {/* Gradient fallback bg */}
+              <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(145deg, #1a0a00 0%, #0a0014 60%, #08080E 100%)' }} />
+              {/* Logo top-left */}
+              <div className="absolute top-5 left-5 flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,107,53,0.15)', border: '1px solid rgba(255,107,53,0.35)' }}>
+                  <svg width="20" height="20" viewBox="0 0 60 60" fill="none">
                     <path d="M44 20C41 14 35 10 28 10C18 10 10 18 10 30C10 42 18 50 28 50C35 50 41 46 44 40"
-                      stroke="url(#logo-g)" strokeWidth="4" strokeLinecap="round" fill="none"/>
-                    <defs>
-                      <linearGradient id="logo-g" x1="10" y1="10" x2="44" y2="50" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#FF2D55"/><stop offset="100%" stopColor="#FF6B35"/>
-                      </linearGradient>
-                    </defs>
+                      stroke="url(#wg)" strokeWidth="4.5" strokeLinecap="round"/>
+                    <defs><linearGradient id="wg" x1="10" y1="10" x2="44" y2="50" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#FF2D55"/><stop offset="100%" stopColor="#FF6B35"/>
+                    </linearGradient></defs>
                   </svg>
                 </div>
+                <span className="text-white font-black text-lg tracking-tight">CaliBodi</span>
               </div>
+              {/* Calix AI badge */}
+              <div className="absolute bottom-6 left-5">
+                <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5" style={{ background: 'rgba(8,8,14,0.7)', border: '1px solid rgba(255,107,53,0.3)', backdropFilter: 'blur(12px)' }}>
+                  <div className="w-2 h-2 rounded-full bg-cali-orange animate-pulse" />
+                  <span className="text-xs text-cali-orange font-bold tracking-wide">Propulsé par Calix AI</span>
+                </div>
+              </div>
+            </div>
 
+            {/* Content below photo */}
+            <div className="flex-1 px-5 pt-6 pb-4 flex flex-col gap-5">
               <div>
-                <h1 className="text-5xl font-display font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-1">
-                  CaliBodi
+                <h1 className="text-3xl font-black text-white leading-tight mb-2">
+                  Ton coach IA.<br />
+                  <span style={{ background: 'linear-gradient(90deg,#FF6B35,#FF2D55)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Chaque jour avec toi.</span>
                 </h1>
-                <div className="inline-flex items-center gap-1.5 bg-cali-orange/10 border border-cali-orange/20 rounded-full px-3 py-1 mt-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-cali-orange animate-pulse" />
-                  <span className="text-xs text-cali-orange font-semibold">Propulsé par Calix AI</span>
-                </div>
-              </div>
-
-              {/* Calix message */}
-              <div className="bg-white/[0.04] border border-white/8 rounded-2xl p-4 mx-2 text-left">
-                <div className="flex items-center gap-2 mb-2">
-                  <CalixOrb size={28} />
-                  <span className="text-xs font-bold text-cali-orange">Calix</span>
-                </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  Bonjour 👋 Je suis <strong className="text-white">Calix</strong>, ton coach IA personnel.
-                  Je vais apprendre à te connaître pour t'accompagner chaque jour — sport, nutrition, récupération.
+                <p style={{ color: 'var(--text-secondary)' }} className="text-sm leading-relaxed">
+                  Calix apprend à te connaître et adapte sport, nutrition et récupération à ton corps.
                 </p>
               </div>
 
-              {/* Features row */}
-              <div className="flex gap-3 w-full">
-                {[['🏋️', 'Sport'], ['🥗', 'Nutrition'], ['💧', 'Récup']].map(([icon, label]) => (
-                  <div key={label} className="flex-1 bg-white/[0.03] border border-white/6 rounded-xl py-3 flex flex-col items-center gap-1">
-                    <span className="text-xl">{icon}</span>
-                    <span className="text-[10px] text-gray-500 font-medium">{label}</span>
+              {/* 3 pillars */}
+              <div className="grid grid-cols-3 gap-2.5">
+                {([
+                  { label: 'Sport', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg> },
+                  { label: 'Nutrition', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C853" strokeWidth="2" strokeLinecap="round"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 6v6l4 2"/></svg> },
+                  { label: 'Récup', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BF5AF2" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> },
+                ] as {label:string;icon:React.ReactNode}[]).map(({ label, icon }) => (
+                  <div key={label} className="rounded-2xl py-3.5 flex flex-col items-center gap-2"
+                    style={{ background: 'var(--overlay-card)', border: '1px solid var(--border)' }}>
+                    {icon}
+                    <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -558,18 +585,29 @@ export default function OnboardingPage() {
               <p className="text-sm text-gray-500 mt-1">Je vais personnaliser tout ton programme</p>
             </div>
 
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               {(Object.entries(GOAL_CONFIG) as [Goal, typeof GOAL_CONFIG['health']][]).map(([g, cfg]) => (
                 <button key={g} onClick={() => setGoal(g)}
-                  className={`w-full p-4 rounded-2xl text-left flex items-center gap-4 transition-all bg-gradient-to-r ${goal === g ? `${cfg.color} border ${cfg.border}` : 'bg-white/[0.03] border border-white/6'}`}>
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl bg-gradient-to-br ${goal === g ? cfg.color : 'bg-white/5'} border ${goal === g ? cfg.border : 'border-white/5'}`}>
-                    {cfg.icon}
+                  className="relative overflow-hidden text-left active:scale-95 transition-transform"
+                  style={{ borderRadius: '20px', height: '130px', border: goal === g ? `2px solid ${cfg.accent}` : '2px solid transparent', boxShadow: goal === g ? `0 0 24px ${cfg.accent}40` : 'none' }}>
+                  {/* Photo bg */}
+                  <img src={cfg.photo} alt={cfg.label} className="absolute inset-0 w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  {/* Gradient fallback */}
+                  <div className="absolute inset-0 -z-10" style={{ background: cfg.gradient }} />
+                  {/* Dark overlay */}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.1) 100%)' }} />
+                  {/* Check */}
+                  {goal === g && (
+                    <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: cfg.accent }}>
+                      <Check size={13} color="#fff" />
+                    </div>
+                  )}
+                  {/* Text */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <p className="text-white font-bold text-sm leading-tight">{cfg.label}</p>
+                    <p className="text-white/60 text-[10px] mt-0.5 leading-tight">{cfg.desc}</p>
                   </div>
-                  <div className="flex-1">
-                    <p className={`font-bold text-sm ${goal === g ? 'text-white' : 'text-gray-300'}`}>{cfg.label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{cfg.desc}</p>
-                  </div>
-                  {goal === g && <Check size={18} className={cfg.text} />}
                 </button>
               ))}
             </div>
@@ -588,20 +626,31 @@ export default function OnboardingPage() {
 
             <div className="space-y-3">
               {([
-                [30, '🎯', '30 jours', 'Idéal pour démarrer', 'Résultats visibles rapidement'],
-                [60, '🔥', '60 jours', 'Transformation visible', 'Nouvelles habitudes solidement installées'],
-                [90, '🏆', '90 jours', 'Changement de vie', 'Transformation complète, corps et mental'],
-              ] as [30 | 60 | 90, string, string, string, string][]).map(([d, icon, title, sub, detail]) => (
+                [30, PHOTO('beginner'),  'linear-gradient(135deg,#0d0800 0%,#2a1500 100%)', '#FF8C42', '30 jours', 'Résultats visibles rapidement'],
+                [60, PHOTO('advanced'),  'linear-gradient(135deg,#080010 0%,#1a0030 100%)', '#FF6B35', '60 jours', 'Nouvelles habitudes solidement installées'],
+                [90, PHOTO('summary'),   'linear-gradient(135deg,#000814 0%,#001433 100%)', '#FF2D55', '90 jours', 'Transformation complète, corps et mental'],
+              ] as [30|60|90, string, string, string, string, string][]).map(([d, photo, grad, accent, title, detail]) => (
                 <button key={d} onClick={() => setProgramDuration(d)}
-                  className={`w-full p-4 rounded-2xl text-left flex items-center gap-4 transition-all ${programDuration === d ? 'bg-cali-orange/10 border border-cali-orange/40' : 'bg-white/[0.03] border border-white/6'}`}>
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${programDuration === d ? 'bg-cali-orange/15' : 'bg-white/5'}`}>
-                    {icon}
+                  className="relative w-full overflow-hidden text-left active:scale-[0.98] transition-transform"
+                  style={{ borderRadius: '20px', height: '86px', border: programDuration === d ? `2px solid ${accent}` : '1px solid var(--border)', boxShadow: programDuration === d ? `0 0 20px ${accent}30` : 'none' }}>
+                  <img src={photo} alt={title} className="absolute inset-0 w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <div className="absolute inset-0 -z-10" style={{ background: grad }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.1) 100%)' }} />
+                  <div className="absolute inset-0 flex items-center px-4 justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-white font-black text-base">{title}</span>
+                        {programDuration === d && <div className="w-2 h-2 rounded-full" style={{ background: accent }} />}
+                      </div>
+                      <p className="text-white/55 text-xs">{detail}</p>
+                    </div>
+                    {programDuration === d && (
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: accent }}>
+                        <Check size={14} color="#fff" />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <p className={`font-bold text-sm ${programDuration === d ? 'text-white' : 'text-gray-300'}`}>{title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{programDuration === d ? detail : sub}</p>
-                  </div>
-                  {programDuration === d && <Check size={18} className="text-cali-orange" />}
                 </button>
               ))}
             </div>
@@ -654,20 +703,28 @@ export default function OnboardingPage() {
 
             <div className="space-y-3">
               {([
-                ['beginner', '🌱', 'Débutant', 'Peu ou pas d\'expérience sportive', 'from-green-500/15 to-green-500/5', 'border-green-500/30'],
-                ['intermediate', '⚡', 'Intermédiaire', 'Sport régulier depuis quelques mois', 'from-blue-500/15 to-blue-500/5', 'border-blue-500/30'],
-                ['advanced', '🔥', 'Avancé', 'Entraînement intensif depuis +1 an', 'from-orange-500/15 to-orange-500/5', 'border-orange-500/30'],
-              ] as [Difficulty, string, string, string, string, string][]).map(([l, icon, title, desc, gradient, border]) => (
+                ['beginner',     PHOTO('beginner'), 'linear-gradient(135deg,#001a06 0%,#003510 100%)', '#00C853', 'Débutant',      'Peu ou pas d\'expérience sportive'],
+                ['intermediate', PHOTO('welcome'),  'linear-gradient(135deg,#000d1a 0%,#001433 100%)', '#3B82F6', 'Intermédiaire', 'Sport régulier depuis quelques mois'],
+                ['advanced',     PHOTO('advanced'), 'linear-gradient(135deg,#1a0400 0%,#3d0d00 100%)', '#FF6B35', 'Avancé',        'Entraînement intensif depuis +1 an'],
+              ] as [Difficulty, string, string, string, string, string][]).map(([l, photo, grad, accent, title, desc]) => (
                 <button key={l} onClick={() => setLevel(l)}
-                  className={`w-full p-4 rounded-2xl text-left flex items-center gap-4 transition-all bg-gradient-to-r ${level === l ? `${gradient} border ${border}` : 'bg-white/[0.03] border border-white/6'}`}>
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${level === l ? `bg-gradient-to-br ${gradient} border ${border}` : 'bg-white/5 border border-white/5'}`}>
-                    {icon}
+                  className="relative w-full overflow-hidden text-left active:scale-[0.98] transition-transform"
+                  style={{ borderRadius: '20px', height: '90px', border: level === l ? `2px solid ${accent}` : '1px solid var(--border)', boxShadow: level === l ? `0 0 20px ${accent}30` : 'none' }}>
+                  <img src={photo} alt={title} className="absolute inset-0 w-full h-full object-cover object-top"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <div className="absolute inset-0 -z-10" style={{ background: grad }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.1) 100%)' }} />
+                  <div className="absolute inset-0 flex items-center px-4 gap-3">
+                    <div className="flex-1">
+                      <p className="text-white font-bold text-sm">{title}</p>
+                      <p className="text-white/55 text-xs mt-0.5">{desc}</p>
+                    </div>
+                    {level === l && (
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: accent }}>
+                        <Check size={14} color="#fff" />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <p className={`font-bold text-sm ${level === l ? 'text-white' : 'text-gray-300'}`}>{title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                  </div>
-                  {level === l && <Check size={18} className="text-cali-orange" />}
                 </button>
               ))}
             </div>
@@ -786,34 +843,53 @@ export default function OnboardingPage() {
       /* ── Summary ──────────────────────────────────────────────────────── */
       default:
         return (
-          <div className="space-y-5">
-            <div className="text-center">
-              <div className="flex justify-center mb-3"><CalixOrb size={64} /></div>
-              <h2 className="text-2xl font-display font-black text-white">Tout est prêt{name ? `, ${name}` : ''} !</h2>
-              <p className="text-sm text-gray-500 mt-1">Voici ton programme personnalisé</p>
-            </div>
-
-            <div className="bg-white/[0.03] border border-white/6 rounded-2xl p-4 space-y-3">
-              {[
-                ['Objectif', GOAL_CONFIG[goal]?.label],
-                ['Programme', `${programDuration} jours · ${sessionsPerWeek}× / semaine`],
-                ['Niveau', { beginner: '🌱 Débutant', intermediate: '⚡ Intermédiaire', advanced: '🔥 Avancé' }[level]],
-                ['Poids', `${weight} kg → ${targetWeight} kg (${height} cm)`],
-                ['Blessures', noInjury ? 'Aucune' : injuries.map(i => INJURY_OPTIONS.find(o => o.id === i)?.icon).join(' ')],
-                ['Alimentation', dietaryPrefs.length === 0 ? 'Standard' : dietaryPrefs.map(d => DIET_OPTIONS.find(o => o.id === d)?.label).join(', ')],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">{label}</span>
-                  <span className="text-xs text-white font-semibold text-right max-w-[55%]">{value}</span>
+          <div className="flex flex-col h-full -mx-5 -mt-5">
+            {/* Summary hero */}
+            <div className="relative h-[36vh] flex-shrink-0 overflow-hidden" style={{ borderRadius: '0 0 36px 36px' }}>
+              <img src={GOAL_CONFIG[goal]?.photo || PHOTO('summary')} alt="" className="w-full h-full object-cover"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <div className="absolute inset-0 -z-10" style={{ background: GOAL_CONFIG[goal]?.gradient || 'linear-gradient(135deg,#0a0a0f,#1a0a00)' }} />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(8,8,14,0.3) 0%, rgba(8,8,14,0.95) 100%)' }} />
+              <div className="absolute bottom-6 left-5 right-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <CalixOrb size={36} />
+                  <div>
+                    <p className="text-[10px] font-black tracking-widest uppercase text-cali-orange">Calix</p>
+                    <p className="text-white font-black text-xl leading-tight">Tout est prêt{name ? `, ${name}` : ''} !</p>
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
 
-            <div className="bg-gradient-to-r from-cali-orange/10 to-cali-red/10 border border-cali-orange/20 rounded-2xl p-4 flex items-center gap-3">
-              <span className="text-2xl">🎁</span>
-              <div>
-                <p className="text-sm font-bold text-white">7 jours Premium offerts</p>
-                <p className="text-xs text-gray-500">Toutes les fonctionnalités débloquées</p>
+            <div className="flex-1 px-5 pt-5 pb-4 space-y-3 overflow-y-auto">
+              {/* Stats recap */}
+              <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                {[
+                  ['Objectif', GOAL_CONFIG[goal]?.label],
+                  ['Programme', `${programDuration} jours · ${sessionsPerWeek}× / semaine`],
+                  ['Niveau', { beginner: 'Débutant', intermediate: 'Intermédiaire', advanced: 'Avancé' }[level]],
+                  ['Poids', `${weight} kg → ${targetWeight} kg (${height} cm)`],
+                  ['Blessures', noInjury ? 'Aucune' : injuries.map(i => INJURY_OPTIONS.find(o => o.id === i)?.label).join(', ')],
+                  ['Alimentation', dietaryPrefs.length === 0 ? 'Standard' : dietaryPrefs.map(d => DIET_OPTIONS.find(o => o.id === d)?.label).join(', ')],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex justify-between items-center py-0.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>{label}</span>
+                    <span className="text-xs font-semibold text-right max-w-[58%]" style={{ color: 'var(--text-primary)' }}>{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Premium badge */}
+              <div className="rounded-2xl p-4 flex items-center gap-4"
+                style={{ background: 'linear-gradient(135deg, rgba(255,107,53,0.12) 0%, rgba(255,45,85,0.08) 100%)', border: '1px solid rgba(255,107,53,0.25)' }}>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg,#FF6B35,#FF2D55)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>7 jours Premium offerts</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Toutes les fonctionnalités débloquées</p>
+                </div>
               </div>
             </div>
           </div>
@@ -825,39 +901,42 @@ export default function OnboardingPage() {
   const progress = step / TOTAL_STEPS;
 
   return (
-    <div className="min-h-dvh flex flex-col bg-cali-dark" style={{ paddingBottom: 'env(safe-area-inset-bottom, 24px)' }}>
+    <div className="min-h-dvh flex flex-col" style={{ background: 'var(--bg)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
 
       {/* Progress bar */}
       {step > 0 && (
-        <div className="px-5 pt-4 pb-2 flex items-center gap-3">
-          <button onClick={() => setStep(step === 2 ? 1 : step - 1)} className="text-gray-600 active:text-white transition-colors">
-            <ChevronLeft size={22} />
+        <div className="px-5 pt-5 pb-3 flex items-center gap-3 flex-shrink-0">
+          <button onClick={() => setStep(step === 2 ? 1 : step - 1)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-transform"
+            style={{ background: 'var(--overlay-card)', border: '1px solid var(--border)' }}>
+            <ChevronLeft size={18} style={{ color: 'var(--text-secondary)' }} />
           </button>
-          <div className="flex-1 h-1 bg-white/8 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-cali-red to-cali-orange rounded-full transition-all duration-500"
-              style={{ width: `${progress * 100}%` }} />
+          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
+            <div className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progress * 100}%`, background: 'linear-gradient(90deg,#FF2D55,#FF6B35)' }} />
           </div>
-          <span className="text-[11px] text-gray-600 font-medium w-9 text-right">{step}/{TOTAL_STEPS}</span>
+          <span className="text-[11px] font-semibold w-8 text-right" style={{ color: 'var(--text-tertiary)' }}>{step}/{TOTAL_STEPS}</span>
         </div>
       )}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-5 pt-5 pb-4">
+      <div className="flex-1 overflow-y-auto px-5 pt-5 pb-4" style={{ minHeight: 0 }}>
         {renderStep()}
       </div>
 
       {/* CTA button */}
-      <div className="px-5 pb-2">
+      <div className="px-5 pt-2 flex-shrink-0">
         {!isLastStep ? (
           <button onClick={handleNext} disabled={!canNext() || authLoading}
-            className={`w-full py-4 rounded-2xl font-display font-bold text-sm flex items-center justify-center gap-2 transition-all ${canNext() && !authLoading
-              ? 'bg-gradient-to-r from-cali-red to-cali-orange text-white shadow-[0_4px_20px_rgba(255,107,53,0.35)]'
-              : 'bg-white/[0.05] text-gray-600'}`}>
+            className="w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+            style={canNext() && !authLoading
+              ? { background: 'linear-gradient(135deg,#FF6B35,#FF2D55)', color: '#fff', boxShadow: '0 6px 28px rgba(255,107,53,0.45)' }
+              : { background: 'var(--overlay-card)', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }}>
             {authLoading ? (
-              <div className="flex items-center gap-2">
+              <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 <span>Connexion...</span>
-              </div>
+              </>
             ) : step === 0 ? (
               <>Commencer <ChevronRight size={18} /></>
             ) : step === 1 ? (
@@ -868,7 +947,8 @@ export default function OnboardingPage() {
           </button>
         ) : (
           <button onClick={handleFinish}
-            className="w-full py-4 rounded-2xl font-display font-bold text-sm bg-gradient-to-r from-cali-red to-cali-orange text-white shadow-[0_4px_20px_rgba(255,107,53,0.4)] flex items-center justify-center gap-2">
+            className="w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg,#FF6B35,#FF2D55)', color: '#fff', boxShadow: '0 6px 28px rgba(255,107,53,0.45)' }}>
             <Sparkles size={18} /> Commencer mon programme
           </button>
         )}

@@ -28,6 +28,20 @@ const config: Config = {
         display: ['Inter', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
       },
+      backgroundColor: {
+        'theme':         'var(--bg)',
+        'theme-card':    'var(--bg-card)',
+        'theme-surface': 'var(--bg-surface)',
+      },
+      textColor: {
+        'primary':   'var(--text-primary)',
+        'secondary': 'var(--text-secondary)',
+        'tertiary':  'var(--text-tertiary)',
+      },
+      borderColor: {
+        'theme':       'var(--border)',
+        'theme-strong':'var(--border-strong)',
+      },
       borderRadius: {
         '2xl': '1rem',
         '3xl': '1.5rem',
