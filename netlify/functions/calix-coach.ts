@@ -112,7 +112,7 @@ export const handler: Handler = async (event) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-haiku-4-5-20250714',
         max_tokens: 300,
         system: buildSystemPrompt(ctx),
         messages: messages.length > 0 ? messages : [{ role: 'user', content: '__open__' }],

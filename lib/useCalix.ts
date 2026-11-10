@@ -69,7 +69,7 @@ export function useCalix() {
           const last = sleep.entries?.[sleep.entries.length - 1];
           return last ? Math.round(last.duration / 60 * 10) / 10 : 0;
         })(),
-        hydrationPercent: Math.round(hydration.getProgress?.() * 100) || 0,
+        hydrationPercent: hydration.getProgress?.() || 0,
         hydrationMl: hydration.consumed || 0,
       },
 
