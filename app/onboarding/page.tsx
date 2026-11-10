@@ -229,14 +229,25 @@ export default function OnboardingPage() {
     setAuthError('');
     try {
       const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+      // skipNativeAuth: false → Firebase signs in natively, then we sync web SDK
       const result = await FirebaseAuthentication.signInWithGoogle();
+
+      // Sync to web Firebase SDK using the credential from native sign-in
       const idToken = result.credential?.idToken;
-      if (!idToken) throw new Error('no-id-token');
-      const { GoogleAuthProvider, signInWithCredential } = await import('firebase/auth');
-      const credential = GoogleAuthProvider.credential(idToken);
-      const userCredential = await signInWithCredential(auth, credential);
-      const userEmail = userCredential.user.email || '';
-      const uid = userCredential.user.uid;
+      const accessToken = result.credential?.accessToken;
+      if (idToken) {
+        const { GoogleAuthProvider, signInWithCredential } = await import('firebase/auth');
+        const credential = GoogleAuthProvider.credential(idToken, accessToken);
+        await signInWithCredential(auth, credential).catch(() => {
+          // Web SDK sync failed — native sign-in still succeeded, continue
+        });
+      }
+
+      // Get user from native result or web SDK
+      const userEmail = result.user?.email || auth.currentUser?.email || '';
+      const uid = result.user?.uid || auth.currentUser?.uid || '';
+      if (!uid) throw new Error('no-user');
+
       setEmail(userEmail);
       await initUserTrial(uid);
       if (userEmail.toLowerCase() === 'azizkamaz95@gmail.com') {
