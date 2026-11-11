@@ -192,91 +192,91 @@ function Chip({ sel, onClick, children }: { sel: boolean; onClick: () => void; c
 
 /* ─── Calix video presentation screen ────────────────────────────────────── */
 function CalixVideoStep({ lang, name, onNext }: { lang: import('@/lib/languageStore').AppLanguage; name: string; onNext: () => void }) {
-  const { t: tFn, isRTL: isRTLFn } = { t, isRTL };
-  const rtl = isRTLFn(lang);
-  const script = tFn(lang, 'calix_tts', { name: name || 'toi' });
-  const videoSrc = `/videos/onboarding/calix_${lang}.mp4`;
+  const rtl = isRTL(lang);
+  const script = t(lang, 'calix_tts', { name: name || 'toi' });
+  // Single shared video, looped — stops when TTS finishes
+  const videoSrc = `/videos/onboarding/calix_coaching.mp4`;
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [videoExists, setVideoExists] = useState(true);
+  const doneRef = useRef(false);
+
+  const finish = useCallback(() => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    if (typeof window !== 'undefined') window.speechSynthesis?.cancel();
+    if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0; }
+    onNext();
+  }, [onNext]);
 
   useEffect(() => {
-    // Auto-play TTS + video on mount
-    setPlaying(true);
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(script);
-      const langMap: Record<string, string> = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', ar: 'ar-SA' };
-      utt.lang = langMap[lang] || 'fr-FR';
-      utt.rate = 0.92;
-      utt.pitch = 1.0;
-
-      let start = Date.now();
-      const wordRate = script.length * 60; // rough ms estimate
-      utt.onstart = () => { start = Date.now(); };
-      utt.onboundary = () => {
-        const elapsed = Date.now() - start;
-        setProgress(Math.min(elapsed / wordRate, 0.95));
-      };
-      utt.onend = () => { setProgress(1); };
-      window.speechSynthesis.speak(utt);
-    }
+    // Start video loop
     if (videoRef.current) videoRef.current.play().catch(() => {});
 
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      // No TTS available — auto-advance after 13s
+      const t = setTimeout(finish, 13000);
+      return () => clearTimeout(t);
+    }
+
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(script);
+    const langMap: Record<string, string> = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', ar: 'ar-SA' };
+    utt.lang = langMap[lang] || 'fr-FR';
+    utt.rate = 0.92;
+    utt.pitch = 1.0;
+
+    let startTime = 0;
+    // Estimate total duration from script length (~12 chars/sec at rate 0.92)
+    const estimatedMs = (script.length / 12) * 1000;
+
+    utt.onstart = () => { startTime = Date.now(); };
+    utt.onboundary = () => {
+      if (!startTime) return;
+      const elapsed = Date.now() - startTime;
+      setProgress(Math.min(elapsed / estimatedMs, 0.95));
+    };
+    utt.onend = () => {
+      setProgress(1);
+      // Small pause so the progress bar reaches 100% visually
+      setTimeout(finish, 400);
+    };
+    utt.onerror = () => finish();
+
+    window.speechSynthesis.speak(utt);
     return () => { window.speechSynthesis?.cancel(); };
   }, []); // eslint-disable-line
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ background: '#0A0A0F' }} dir={rtl ? 'rtl' : 'ltr'}>
-      {/* Video or animated fallback */}
-      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-        {videoExists ? (
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            className="w-full h-full object-cover"
-            playsInline
-            muted
-            onError={() => setVideoExists(false)}
-          />
-        ) : (
-          /* Animated orb fallback when video not yet available */
-          <div className="flex flex-col items-center gap-6">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(255,107,53,0.2)', animationDuration: '2s' }} />
-              <CalixOrb size={120} />
-            </div>
-            <div className="text-center px-8">
-              <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-3">Calix</p>
-              <p className="text-white text-lg font-semibold leading-relaxed">{script}</p>
-            </div>
-          </div>
-        )}
-        {/* Dark gradient bottom */}
-        {videoExists && (
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(10,10,15,0.85) 100%)' }} />
-        )}
+      {/* Video looping */}
+      <div className="flex-1 relative overflow-hidden">
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          className="w-full h-full object-cover"
+          playsInline
+          muted
+          loop
+        />
+        {/* Bottom gradient */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 40%, rgba(10,10,15,0.9) 100%)' }} />
+        {/* Calix label */}
+        <div className="absolute bottom-32 left-0 right-0 px-6 text-center">
+          <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-2">CALIX</p>
+          <p className="text-white text-base font-medium leading-relaxed opacity-80">{script}</p>
+        </div>
       </div>
 
       {/* Bottom controls */}
-      <div className="px-5 pb-8 pt-4 flex flex-col gap-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+      <div className="px-5 pb-8 pt-3 flex flex-col gap-3 bg-[#0A0A0F]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
         {/* TTS progress bar */}
-        {playing && (
-          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress * 100}%`, background: 'linear-gradient(90deg,#FF6B35,#FF2D55)' }} />
-          </div>
-        )}
+        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+          <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress * 100}%`, background: 'linear-gradient(90deg,#FF6B35,#FF2D55)' }} />
+        </div>
 
-        <button onClick={() => { window.speechSynthesis?.cancel(); onNext(); }}
-          className="w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
-          style={{ background: 'linear-gradient(135deg,#FF6B35,#FF2D55)', color: '#fff', boxShadow: '0 6px 28px rgba(255,107,53,0.45)' }}>
-          {tFn(lang, 'continue')} <ChevronRight size={18} />
-        </button>
-
-        <button onClick={() => { window.speechSynthesis?.cancel(); onNext(); }}
-          className="text-xs text-gray-600 w-full text-center py-2">
-          {tFn(lang, 'video_skip')}
+        <button onClick={finish}
+          className="text-xs text-gray-500 w-full text-center py-2">
+          {t(lang, 'video_skip')}
         </button>
       </div>
     </div>
