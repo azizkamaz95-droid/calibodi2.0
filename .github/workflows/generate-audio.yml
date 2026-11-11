@@ -35,6 +35,13 @@ jobs:
       - name: Install tsx
         run: npm install -g tsx
 
+      - name: Clean old audio files (mauvaise voix)
+        run: |
+          # Supprime les anciens fichiers sans préfixe de langue (ex: start_weightloss_1.mp3)
+          find public/audio -maxdepth 1 -name "*.mp3" -not -name "fr_*" -not -name "en_*" -not -name "es_*" -not -name "ar_*" -delete
+          echo "Anciens fichiers supprimés"
+          ls public/audio/ | wc -l
+
       - name: Generate audio files
         run: |
           ARGS=""
