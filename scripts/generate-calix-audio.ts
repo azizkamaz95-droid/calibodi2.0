@@ -16,7 +16,7 @@ const LANG_CONFIG: Record<string, { apiKey: string; voiceId: string }> = {
   fr: { apiKey: 'sk_75902bc56e93ce76480a3ff1a33748708d45f0ea1974b5a6', voiceId: 'WeAAwKYcS06VmXw086yZ' },
   en: { apiKey: 'sk_d39966738dc6c8fac2e694ee63e27dc185fe7f87d3e437e1', voiceId: 'BAdH0bMfq6VleQGLXj38' },
   es: { apiKey: 'sk_954ae932cdefdc3a08dfd43066a73176ee7ed19d78590baf', voiceId: 'Ir1QNHvhaJXbAGhT50w3' },
-  ar: { apiKey: 'sk_75902bc56e93ce76480a3ff1a33748708d45f0ea1974b5a6', voiceId: 'ZeiYF4oDQt8eyQZ1N7Os' },
+  ar: { apiKey: 'sk_2b8d9abaf4461dd9f689136c88815dc50be962b02b068817', voiceId: 'ZeiYF4oDQt8eyQZ1N7Os' },
 };
 
 const OUT_DIR = path.resolve('public/audio/calix');
