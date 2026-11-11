@@ -1,5 +1,8 @@
 # CaliBodi — Claude Code Context
 
+> ⚠️ REPO CORRECT : `/home/user/calibodi2.0` → `azizkamaz95-droid/calibodi2.0`
+> NE JAMAIS travailler dans `/home/user/clibodi-v6` — c'est un ancien projet différent.
+
 ## Projet
 Application fitness Android (APK) + site web marketing.
 - **App** : Next.js 14 + Capacitor 6 → APK Android
