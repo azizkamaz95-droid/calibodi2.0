@@ -101,18 +101,24 @@ export function useCalix() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ctx),
       });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`HTTP ${res.status}: ${errText}`);
+      }
       const data = await res.json();
-      const reply: string = data.reply || '';
+      const reply: string = data.reply || data.error || '';
 
       if (userMessage) {
         store.addMessage({ role: 'user', content: userMessage, timestamp: Date.now() });
       }
       store.addMessage({ role: 'assistant', content: reply, timestamp: Date.now() });
 
-      if (!opts?.silent) await speak(reply);
+      try { if (!opts?.silent) await speak(reply); } catch { /* TTS non critique */ }
       return reply;
     } catch (e: any) {
-      return '';
+      const errMsg = `Désolé, je ne peux pas répondre pour l'instant. (${e?.message || 'erreur réseau'})`;
+      store.addMessage({ role: 'assistant', content: errMsg, timestamp: Date.now() });
+      return errMsg;
     } finally {
       store.setLoading(false);
     }
