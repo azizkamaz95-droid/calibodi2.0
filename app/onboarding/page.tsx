@@ -212,38 +212,59 @@ function CalixVideoStep({ lang, name, onNext }: { lang: import('@/lib/languageSt
     // Start video loop
     if (videoRef.current) videoRef.current.play().catch(() => {});
 
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      // No TTS available — auto-advance after 13s
-      const t = setTimeout(finish, 13000);
-      return () => clearTimeout(t);
-    }
-
-    window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(script);
     const langMap: Record<string, string> = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', ar: 'ar-SA' };
-    utt.lang = langMap[lang] || 'fr-FR';
-    utt.rate = 0.92;
-    utt.pitch = 1.0;
+    const langCode = langMap[lang] || 'fr-FR';
 
-    let startTime = 0;
-    // Estimate total duration from script length (~12 chars/sec at rate 0.92)
-    const estimatedMs = (script.length / 12) * 1000;
+    // Total estimated duration for progress bar (part1 ~0.5s + name ~0.5s + part2 ~11s)
+    const part2Text = t(lang, 'calix_tts_part2');
+    const estimatedMs = 500 + 600 + (part2Text.length / 12) * 1000;
+    const globalStart = { current: Date.now() };
 
-    utt.onstart = () => { startTime = Date.now(); };
-    utt.onboundary = () => {
-      if (!startTime) return;
-      const elapsed = Date.now() - startTime;
-      setProgress(Math.min(elapsed / estimatedMs, 0.95));
+    const updateProgress = () => {
+      const elapsed = Date.now() - globalStart.current;
+      setProgress(Math.min(elapsed / estimatedMs, 0.97));
     };
-    utt.onend = () => {
+    const raf = { id: 0 };
+    const tick = () => { updateProgress(); raf.id = requestAnimationFrame(tick); };
+    raf.id = requestAnimationFrame(tick);
+
+    const speakName = (): Promise<void> => new Promise(resolve => {
+      if (typeof window === 'undefined' || !window.speechSynthesis) { resolve(); return; }
+      const utt = new SpeechSynthesisUtterance(name || 'toi');
+      utt.lang = langCode;
+      utt.rate = 1.0;
+      utt.onend = () => resolve();
+      utt.onerror = () => resolve();
+      window.speechSynthesis.speak(utt);
+    });
+
+    const playAudio = (src: string): Promise<void> => new Promise(resolve => {
+      const audio = new Audio(src);
+      audio.onended = () => resolve();
+      audio.onerror = () => resolve(); // skip if file missing
+      audio.play().catch(() => resolve());
+    });
+
+    const run = async () => {
+      globalStart.current = Date.now();
+      // Part 1: "Bonjour" / "Hey" / "Hola" / "مرحباً"
+      await playAudio(`/audio/calix/onboarding_${lang}_1.mp3`);
+      // Brief pause then name via Web Speech
+      await new Promise(r => setTimeout(r, 180));
+      await speakName();
+      await new Promise(r => setTimeout(r, 200));
+      // Part 2: rest of intro
+      await playAudio(`/audio/calix/onboarding_${lang}_2.mp3`);
+      cancelAnimationFrame(raf.id);
       setProgress(1);
-      // Small pause so the progress bar reaches 100% visually
       setTimeout(finish, 400);
     };
-    utt.onerror = () => finish();
 
-    window.speechSynthesis.speak(utt);
-    return () => { window.speechSynthesis?.cancel(); };
+    run();
+    return () => {
+      cancelAnimationFrame(raf.id);
+      window.speechSynthesis?.cancel();
+    };
   }, []); // eslint-disable-line
 
   return (

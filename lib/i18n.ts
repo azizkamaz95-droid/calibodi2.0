@@ -168,6 +168,7 @@ export const translations = {
 
     // TTS Calix script (name placeholder: {name})
     calix_tts: 'Bonjour {name} ! Je suis Calix, ton coach IA. Je vais analyser ton profil et créer un programme personnalisé rien que pour toi. Sport, nutrition, récupération — tout sera adapté à ton corps.',
+    calix_tts_part2: 'Je suis Calix, ton coach IA. Je vais analyser ton profil et créer un programme personnalisé rien que pour toi. Sport, nutrition, récupération — tout sera adapté à ton corps.',
   },
 
   en: {
@@ -315,6 +316,7 @@ export const translations = {
     connecting: 'Connecting...',
 
     calix_tts: 'Hey {name}! I\'m Calix, your AI coach. I\'ll analyze your profile and build a personalized program just for you. Training, nutrition, recovery — everything tailored to your body.',
+    calix_tts_part2: "I'm Calix, your AI coach. I'll analyze your profile and build a personalized program just for you. Training, nutrition, recovery — everything tailored to your body.",
   },
 
   es: {
@@ -462,6 +464,7 @@ export const translations = {
     connecting: 'Conectando...',
 
     calix_tts: '¡Hola {name}! Soy Calix, tu coach de IA. Analizaré tu perfil y crearé un programa personalizado solo para ti. Entrenamiento, nutrición, recuperación — todo adaptado a tu cuerpo.',
+    calix_tts_part2: 'Soy Calix, tu coach de IA. Analizaré tu perfil y crearé un programa personalizado solo para ti. Entrenamiento, nutrición, recuperación — todo adaptado a tu cuerpo.',
   },
 
   ar: {
@@ -609,6 +612,7 @@ export const translations = {
     connecting: 'جاري الاتصال...',
 
     calix_tts: 'مرحباً {name}! أنا كاليكس، مدربك بالذكاء الاصطناعي. سأحلل ملفك وأنشئ برنامجاً مخصصاً لك. رياضة، تغذية، تعافٍ — كل شيء مكيّف مع جسمك.',
+    calix_tts_part2: 'أنا كاليكس، مدربك بالذكاء الاصطناعي. سأحلل ملفك وأنشئ برنامجاً مخصصاً لك. رياضة، تغذية، تعافٍ — كل شيء مكيّف مع جسمك.',
   },
 } as const;
 
