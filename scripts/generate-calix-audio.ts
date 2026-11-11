@@ -13,10 +13,10 @@ import https from 'https';
 // ─── Config par langue (voix native + compte dédié) ──────────────────────────
 
 const LANG_CONFIG: Record<string, { apiKey: string; voiceId: string }> = {
-  fr: { apiKey: 'sk_75902bc56e93ce76480a3ff1a33748708d45f0ea1974b5a6', voiceId: 'WeAAwKYcS06VmXw086yZ' },
-  en: { apiKey: 'sk_d39966738dc6c8fac2e694ee63e27dc185fe7f87d3e437e1', voiceId: 'BAdH0bMfq6VleQGLXj38' },
-  es: { apiKey: 'sk_954ae932cdefdc3a08dfd43066a73176ee7ed19d78590baf', voiceId: 'Ir1QNHvhaJXbAGhT50w3' },
-  ar: { apiKey: 'sk_2b8d9abaf4461dd9f689136c88815dc50be962b02b068817', voiceId: 'ZeiYF4oDQt8eyQZ1N7Os' },
+  fr: { apiKey: 'sk_82fec28ed8af9d6b2d07e25a5c0807d182424c0ddbacfd53', voiceId: 'Kyz47vFGMAEEykC4fLeI' },
+  en: { apiKey: 'sk_4757b2964ba630b9ca44f323e8a35ac77dd5834ecac28be1', voiceId: 'Qq98HbjztThGwtELb5Qm' },
+  es: { apiKey: 'sk_954ae932cdefdc3a08dfd43066a73176ee7ed19d78590baf', voiceId: 'pba0Jahy5ma5OfnuEaRV' },
+  ar: { apiKey: 'sk_1372f99d6d66a44587a3981aa50fa6c718367b91442353d1', voiceId: 'DEttKT1En8KfNd9QEgl7' },
 };
 
 const OUT_DIR = path.resolve('public/audio/calix');
