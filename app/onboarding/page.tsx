@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -8,6 +8,8 @@ import { useUserStore } from '@/lib/userStore';
 import { useFreemiumStore } from '@/lib/freemiumStore';
 import { useHydrationStore } from '@/lib/hydrationStore';
 import { useNutritionStore } from '@/lib/nutritionStore';
+import { useLanguageStore } from '@/lib/languageStore';
+import { t, isRTL } from '@/lib/i18n';
 import type { Gender, Goal, DietaryPref } from '@/lib/userStore';
 import type { Difficulty, InjuryZone } from '@/lib/exerciseLibrary';
 import { Eye, EyeOff, ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react';
@@ -44,6 +46,19 @@ const DIET_OPTIONS: { id: DietaryPref; label: string; icon: string }[] = [
 ];
 
 const ALLERGY_OPTIONS = ['Arachides', 'Fruits à coque', 'Œufs', 'Lait', 'Soja', 'Poisson', 'Crustacés', 'Sésame'];
+
+const ALL_LIMITATION_OPTIONS_I18N = [
+  { key: 'lim_mobility' }, { key: 'lim_cardiac' }, { key: 'lim_asthma' }, { key: 'lim_dizziness' },
+  { key: 'lim_obesity' }, { key: 'lim_post_op' }, { key: 'lim_pregnancy' }, { key: 'lim_arthritis' },
+];
+const CHRONIC_PAIN_OPTIONS_I18N = [
+  { key: 'chronic_knee' }, { key: 'chronic_back' }, { key: 'chronic_sciatica' }, { key: 'chronic_shoulder' },
+  { key: 'chronic_carpal' }, { key: 'chronic_cervical' }, { key: 'chronic_hip' }, { key: 'chronic_plantar' },
+];
+const DIET_OPTIONS_I18N: { id: DietaryPref; icon: string }[] = [
+  { id: 'vegetarian', icon: '🥬' }, { id: 'vegan', icon: '🌱' },
+  { id: 'lactose_free', icon: '🥛' }, { id: 'gluten_free', icon: '🌾' }, { id: 'tayyibat', icon: '🌿' },
+];
 
 /* ─── DrumRoll (conservé à l'identique) ─────────────────────────────────── */
 function DrumRoll({ value, onChange, min, max, unit, label }: { value: number; onChange: (v: number) => void; min: number; max: number; unit: string; label: string }) {
@@ -175,6 +190,99 @@ function Chip({ sel, onClick, children }: { sel: boolean; onClick: () => void; c
   );
 }
 
+/* ─── Calix video presentation screen ────────────────────────────────────── */
+function CalixVideoStep({ lang, name, onNext }: { lang: import('@/lib/languageStore').AppLanguage; name: string; onNext: () => void }) {
+  const { t: tFn, isRTL: isRTLFn } = { t, isRTL };
+  const rtl = isRTLFn(lang);
+  const script = tFn(lang, 'calix_tts', { name: name || 'toi' });
+  const videoSrc = `/videos/onboarding/calix_${lang}.mp4`;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [videoExists, setVideoExists] = useState(true);
+
+  useEffect(() => {
+    // Auto-play TTS + video on mount
+    setPlaying(true);
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(script);
+      const langMap: Record<string, string> = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', ar: 'ar-SA' };
+      utt.lang = langMap[lang] || 'fr-FR';
+      utt.rate = 0.92;
+      utt.pitch = 1.0;
+
+      let start = Date.now();
+      const wordRate = script.length * 60; // rough ms estimate
+      utt.onstart = () => { start = Date.now(); };
+      utt.onboundary = () => {
+        const elapsed = Date.now() - start;
+        setProgress(Math.min(elapsed / wordRate, 0.95));
+      };
+      utt.onend = () => { setProgress(1); };
+      window.speechSynthesis.speak(utt);
+    }
+    if (videoRef.current) videoRef.current.play().catch(() => {});
+
+    return () => { window.speechSynthesis?.cancel(); };
+  }, []); // eslint-disable-line
+
+  return (
+    <div className="fixed inset-0 z-[200] flex flex-col" style={{ background: '#0A0A0F' }} dir={rtl ? 'rtl' : 'ltr'}>
+      {/* Video or animated fallback */}
+      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+        {videoExists ? (
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            className="w-full h-full object-cover"
+            playsInline
+            muted
+            onError={() => setVideoExists(false)}
+          />
+        ) : (
+          /* Animated orb fallback when video not yet available */
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(255,107,53,0.2)', animationDuration: '2s' }} />
+              <CalixOrb size={120} />
+            </div>
+            <div className="text-center px-8">
+              <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-3">Calix</p>
+              <p className="text-white text-lg font-semibold leading-relaxed">{script}</p>
+            </div>
+          </div>
+        )}
+        {/* Dark gradient bottom */}
+        {videoExists && (
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 50%, rgba(10,10,15,0.85) 100%)' }} />
+        )}
+      </div>
+
+      {/* Bottom controls */}
+      <div className="px-5 pb-8 pt-4 flex flex-col gap-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)' }}>
+        {/* TTS progress bar */}
+        {playing && (
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress * 100}%`, background: 'linear-gradient(90deg,#FF6B35,#FF2D55)' }} />
+          </div>
+        )}
+
+        <button onClick={() => { window.speechSynthesis?.cancel(); onNext(); }}
+          className="w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{ background: 'linear-gradient(135deg,#FF6B35,#FF2D55)', color: '#fff', boxShadow: '0 6px 28px rgba(255,107,53,0.45)' }}>
+          {tFn(lang, 'continue')} <ChevronRight size={18} />
+        </button>
+
+        <button onClick={() => { window.speechSynthesis?.cancel(); onNext(); }}
+          className="text-xs text-gray-600 w-full text-center py-2">
+          {tFn(lang, 'video_skip')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main page ──────────────────────────────────────────────────────────── */
 export default function OnboardingPage() {
   const router = useRouter();
@@ -183,6 +291,10 @@ export default function OnboardingPage() {
   const startTrial = useFreemiumStore((s) => s.startTrial);
   const setBaseGoal = useHydrationStore((s) => s.setBaseGoal);
   const setDailyGoals = useNutritionStore((s) => s.setDailyGoals);
+  const { language, setLanguage } = useLanguageStore();
+  const lang = language;
+  const rtl = isRTL(lang);
+  const tr = useCallback((key: Parameters<typeof t>[1], vars?: Record<string, string>) => t(lang, key, vars), [lang]);
 
   const [step, setStep] = useState(0);
 
@@ -216,7 +328,9 @@ export default function OnboardingPage() {
   const [allergies, setAllergies] = useState<string[]>([]);
   const [personalLetter, setPersonalLetter] = useState('');
 
-  const TOTAL_STEPS = 10;
+  // New structure: 0=lang, 1=name+age, 2=calix-video, 3=auth, 4=goal, 5=duration,
+  //                6=body, 7=level, 8=health, 9=nutrition, 10=letter, 11=summary
+  const TOTAL_STEPS = 11;
 
   const toggleInjury = (z: InjuryZone) => { setNoInjury(false); setInjuries(p => p.includes(z) ? p.filter(x => x !== z) : [...p, z]); };
   const toggleLimitation = (l: string) => setLimitations(p => p.includes(l) ? p.filter(x => x !== l) : [...p, l]);
@@ -242,7 +356,7 @@ export default function OnboardingPage() {
       if (userEmail.toLowerCase() === 'azizkamaz95@gmail.com') {
         useFreemiumStore.getState().setPremium('annual_once');
       }
-      setStep(2);
+      setStep(4);
     } catch (err: any) {
       const msg = err?.code || err?.message || String(err);
       if (!msg.includes('12501') && !msg.includes('cancelled') && !msg.includes('cancel')) {
@@ -260,12 +374,12 @@ export default function OnboardingPage() {
         const loginCred = await signInWithEmailAndPassword(auth, email, password);
         if (email.toLowerCase() === 'azizkamaz95@gmail.com') {
           useFreemiumStore.getState().setPremium('annual_once');
-          setStep(2);
+          setStep(4);
         } else if (!loginCred.user.emailVerified) {
           await sendEmailVerification(loginCred.user).catch(() => {});
           setWaitingVerification(true);
         } else {
-          setStep(2);
+          setStep(4);
         }
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -278,7 +392,7 @@ export default function OnboardingPage() {
         try { await initUserTrial(cred.user.uid); } catch (_) {}
         if (email.toLowerCase() === 'azizkamaz95@gmail.com') {
           useFreemiumStore.getState().setPremium('annual_once');
-          setStep(2);
+          setStep(4);
         } else {
           setWaitingVerification(true);
         }
@@ -313,14 +427,14 @@ export default function OnboardingPage() {
   };
 
   const canNext = () => {
-    if (step === 1) return email.includes('@') && password.length >= 6;
-    if (step === 2) return name.trim().length > 0;
-    if (step === 7) return injuries.length > 0 || noInjury;
+    if (step === 1) return name.trim().length > 0;
+    if (step === 3) return email.includes('@') && password.length >= 6;
+    if (step === 8) return injuries.length > 0 || noInjury;
     return true;
   };
 
   const handleNext = () => {
-    if (step === 1) handleAuth();
+    if (step === 3) handleAuth();
     else if (step < TOTAL_STEPS) setStep(step + 1);
   };
 
@@ -329,7 +443,7 @@ export default function OnboardingPage() {
     await auth.currentUser?.reload();
     if (auth.currentUser?.emailVerified) {
       setWaitingVerification(false);
-      setStep(2);
+      setStep(4);
     } else {
       alert('Email pas encore vérifié. Clique sur le lien dans le mail.');
     }
@@ -399,87 +513,112 @@ export default function OnboardingPage() {
 
   const renderStep = () => {
     switch (step) {
-      /* ── 0 Welcome ────────────────────────────────────────────────────── */
+      /* ── 0 Language selection ─────────────────────────────────────────── */
       case 0:
         return (
           <div className="flex flex-col h-full -mx-5 -mt-5">
-            {/* Hero photo */}
-            <div className="relative h-[52vh] flex-shrink-0 overflow-hidden" style={{ borderRadius: '0 0 36px 36px' }}>
-              <img src={PHOTO('welcome')} alt="" className="w-full h-full object-cover"
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              {/* Gradient overlay */}
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(8,8,14,0.2) 0%, rgba(8,8,14,0.0) 40%, rgba(8,8,14,0.95) 100%)' }} />
-              {/* Gradient fallback bg */}
-              <div className="absolute inset-0 -z-10" style={{ background: 'linear-gradient(145deg, #1a0a00 0%, #0a0014 60%, #08080E 100%)' }} />
-              {/* Logo top-left */}
-              <div className="absolute top-5 left-5 flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,107,53,0.15)', border: '1px solid rgba(255,107,53,0.35)' }}>
-                  <svg width="20" height="20" viewBox="0 0 60 60" fill="none">
+            {/* Hero */}
+            <div className="relative h-[40vh] flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ borderRadius: '0 0 36px 36px', background: 'linear-gradient(145deg, #1a0a00 0%, #0a0014 60%, #08080E 100%)' }}>
+              <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 60%, rgba(255,107,53,0.15) 0%, transparent 70%)' }} />
+              <div className="relative flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,107,53,0.15)', border: '1px solid rgba(255,107,53,0.35)' }}>
+                  <svg width="34" height="34" viewBox="0 0 60 60" fill="none">
                     <path d="M44 20C41 14 35 10 28 10C18 10 10 18 10 30C10 42 18 50 28 50C35 50 41 46 44 40"
-                      stroke="url(#wg)" strokeWidth="4.5" strokeLinecap="round"/>
-                    <defs><linearGradient id="wg" x1="10" y1="10" x2="44" y2="50" gradientUnits="userSpaceOnUse">
+                      stroke="url(#lg0)" strokeWidth="4.5" strokeLinecap="round"/>
+                    <defs><linearGradient id="lg0" x1="10" y1="10" x2="44" y2="50" gradientUnits="userSpaceOnUse">
                       <stop offset="0%" stopColor="#FF2D55"/><stop offset="100%" stopColor="#FF6B35"/>
                     </linearGradient></defs>
                   </svg>
                 </div>
-                <span className="text-white font-black text-lg tracking-tight">CaliBodi</span>
-              </div>
-              {/* Calix AI badge */}
-              <div className="absolute bottom-6 left-5">
-                <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5" style={{ background: 'rgba(8,8,14,0.7)', border: '1px solid rgba(255,107,53,0.3)', backdropFilter: 'blur(12px)' }}>
-                  <div className="w-2 h-2 rounded-full bg-cali-orange animate-pulse" />
-                  <span className="text-xs text-cali-orange font-bold tracking-wide">Propulsé par Calix AI</span>
-                </div>
+                <span className="text-white font-black text-2xl tracking-tight">CaliBodi</span>
               </div>
             </div>
 
-            {/* Content below photo */}
-            <div className="flex-1 px-5 pt-6 pb-4 flex flex-col gap-5">
-              <div>
-                <h1 className="text-3xl font-black text-white leading-tight mb-2">
-                  Ton coach IA.<br />
-                  <span style={{ background: 'linear-gradient(90deg,#FF6B35,#FF2D55)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Chaque jour avec toi.</span>
-                </h1>
-                <p style={{ color: 'var(--text-secondary)' }} className="text-sm leading-relaxed">
-                  Calix apprend à te connaître et adapte sport, nutrition et récupération à ton corps.
-                </p>
-              </div>
+            <div className="flex-1 px-5 pt-8 pb-4 flex flex-col gap-6">
+              <h2 className="text-2xl font-display font-black text-white text-center">{tr('lang_choose')}</h2>
 
-              {/* 3 pillars */}
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="space-y-3">
                 {([
-                  { label: 'Sport', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg> },
-                  { label: 'Nutrition', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00C853" strokeWidth="2" strokeLinecap="round"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 6v6l4 2"/></svg> },
-                  { label: 'Récup', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BF5AF2" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> },
-                ] as {label:string;icon:React.ReactNode}[]).map(({ label, icon }) => (
-                  <div key={label} className="rounded-2xl py-3.5 flex flex-col items-center gap-2"
-                    style={{ background: 'var(--overlay-card)', border: '1px solid var(--border)' }}>
-                    {icon}
-                    <span className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary)' }}>{label}</span>
-                  </div>
+                  { code: 'fr' as const, flag: '🇫🇷', name: 'Français' },
+                  { code: 'en' as const, flag: '🇬🇧', name: 'English' },
+                  { code: 'es' as const, flag: '🇪🇸', name: 'Español' },
+                  { code: 'ar' as const, flag: '🇸🇦', name: 'العربية' },
+                ]).map(({ code, flag, name: langName }) => (
+                  <button key={code} onClick={() => setLanguage(code)}
+                    className="w-full py-4 px-5 rounded-2xl flex items-center gap-4 transition-all active:scale-[0.98]"
+                    style={language === code
+                      ? { background: 'rgba(255,107,53,0.12)', border: '2px solid rgba(255,107,53,0.6)', boxShadow: '0 0 20px rgba(255,107,53,0.2)' }
+                      : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <span className="text-3xl">{flag}</span>
+                    <span className={`font-bold text-lg flex-1 ${language === code ? 'text-white' : 'text-gray-400'}`} style={code === 'ar' ? { fontFamily: 'serif', direction: 'rtl' } : {}}>{langName}</span>
+                    {language === code && (
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: '#FF6B35' }}>
+                        <Check size={14} color="#fff" />
+                      </div>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
           </div>
         );
 
-      /* ── 1 Auth ────────────────────────────────────────────────────────── */
+      /* ── 1 Name + Age + Gender ────────────────────────────────────────── */
       case 1:
         return (
-          <div className="space-y-5">
-            <div className="text-center">
-              <CalixOrb size={56} />
-              <div className="mt-3">
-                <h2 className="text-2xl font-display font-black text-white">{isLogin ? 'Bon retour !' : 'Crée ton compte'}</h2>
-                <p className="text-sm text-gray-500 mt-1">{isLogin ? 'Reconnecte-toi pour continuer' : '7 jours Premium offerts'}</p>
+          <div className="space-y-6" dir={rtl ? 'rtl' : 'ltr'}>
+            <div>
+              <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
+              <h2 className="text-2xl font-display font-black text-white leading-tight">{tr('identity_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('identity_subtitle')}</p>
+            </div>
+
+            <input type="text" value={name} onChange={e => setName(e.target.value)}
+              placeholder={tr('identity_name_placeholder')}
+              className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-5 py-4 text-white text-xl font-display font-bold text-center focus:border-cali-orange/50 focus:outline-none" autoFocus />
+
+            <div>
+              <p className="text-xs text-gray-500 font-semibold mb-3">{tr('identity_gender')}</p>
+              <div className="grid grid-cols-3 gap-2">
+                {([['male', '👨', tr('identity_male')], ['female', '👩', tr('identity_female')], ['other', '🧑', tr('identity_other')]] as [Gender, string, string][]).map(([g, icon, label]) => (
+                  <button key={g} onClick={() => setGender(g)}
+                    className={`py-4 rounded-2xl text-sm font-semibold transition-all flex flex-col items-center gap-1.5 ${gender === g ? 'bg-cali-orange/15 border border-cali-orange/50 text-white' : 'bg-white/[0.04] border border-white/8 text-gray-500'}`}>
+                    <span className="text-2xl">{icon}</span>
+                    <span className="text-xs">{label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Google first */}
+            <div>
+              <p className="text-xs text-gray-500 font-semibold mb-3">{tr('identity_age')}</p>
+              <div className="bg-white/[0.03] border border-white/6 rounded-2xl p-4 flex justify-center">
+                <DrumRoll value={age} onChange={setAge} min={14} max={80} unit={tr('identity_age').toLowerCase()} label={tr('identity_age')} />
+              </div>
+            </div>
+          </div>
+        );
+
+      /* ── 2 Calix video presentation ───────────────────────────────────── */
+      case 2:
+        return <CalixVideoStep lang={lang} name={name} onNext={() => setStep(3)} />;
+
+      /* ── 3 Auth ────────────────────────────────────────────────────────── */
+      case 3:
+        return (
+          <div className="space-y-5" dir={rtl ? 'rtl' : 'ltr'}>
+            <div className="text-center">
+              <CalixOrb size={56} />
+              <div className="mt-3">
+                <h2 className="text-2xl font-display font-black text-white">{isLogin ? tr('auth_welcome_back') : tr('auth_create')}</h2>
+                <p className="text-sm text-gray-500 mt-1">{isLogin ? tr('auth_reconnect') : tr('auth_trial')}</p>
+              </div>
+            </div>
+
             <button onClick={handleGoogleSignIn} disabled={googleLoading}
               className="w-full py-4 rounded-2xl bg-white/[0.06] border border-white/12 flex items-center justify-center gap-3 font-semibold text-white text-sm active:opacity-70 transition-opacity">
               {googleLoading ? (
-                <div className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Connexion...</span></div>
+                <div className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>{tr('connecting')}</span></div>
               ) : (
                 <>
                   <svg width="20" height="20" viewBox="0 0 48 48">
@@ -488,25 +627,24 @@ export default function OnboardingPage() {
                     <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                     <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                   </svg>
-                  Continuer avec Google
+                  {tr('auth_google')}
                 </>
               )}
             </button>
 
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-white/8" />
-              <span className="text-[11px] text-gray-600 font-medium">ou par email</span>
+              <span className="text-[11px] text-gray-600 font-medium">{tr('auth_or')}</span>
               <div className="flex-1 h-px bg-white/8" />
             </div>
 
-            {/* Email/password */}
             <div className="space-y-3">
               <input type="email" value={email} onChange={e => { setEmail(e.target.value); setAuthError(''); }}
-                placeholder="ton@email.com"
+                placeholder={tr('auth_email')}
                 className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3.5 text-white text-sm placeholder-gray-600 focus:border-cali-orange/50 focus:outline-none" />
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => { setPassword(e.target.value); setAuthError(''); }}
-                  placeholder="Mot de passe (6 car. min)"
+                  placeholder={tr('auth_password')}
                   className="w-full bg-white/[0.04] border border-white/10 rounded-2xl pl-4 pr-12 py-3.5 text-white text-sm placeholder-gray-600 focus:border-cali-orange/50 focus:outline-none" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
@@ -524,65 +662,30 @@ export default function OnboardingPage() {
             <div className="flex justify-between">
               <button onClick={() => { setIsLogin(!isLogin); setAuthError(''); }}
                 className="text-xs text-cali-orange font-medium">
-                {isLogin ? "Pas de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
+                {isLogin ? tr('auth_no_account') : tr('auth_has_account')}
               </button>
               {isLogin && (
-                <button onClick={handleForgotPassword} className="text-xs text-gray-500">Mot de passe oublié ?</button>
+                <button onClick={handleForgotPassword} className="text-xs text-gray-500">{tr('auth_forgot')}</button>
               )}
             </div>
 
             <p className="text-[10px] text-gray-600 text-center leading-relaxed">
-              En continuant, tu acceptes nos{' '}
-              <button onClick={() => openExternalLink('https://calibodi.com/terms')} className="text-gray-500 underline underline-offset-2">CGU</button>
-              {' '}et notre{' '}
-              <button onClick={() => openExternalLink('https://calibodi.com/privacy')} className="text-gray-500 underline underline-offset-2">Politique de confidentialité</button>.
+              {tr('auth_terms')}{' '}
+              <button onClick={() => openExternalLink('https://calibodi.com/terms')} className="text-gray-500 underline underline-offset-2">{tr('auth_terms_link')}</button>
+              {' '}{tr('auth_privacy')}{' '}
+              <button onClick={() => openExternalLink('https://calibodi.com/privacy')} className="text-gray-500 underline underline-offset-2">{tr('auth_privacy_link')}</button>.
             </p>
           </div>
         );
 
-      /* ── 2 Identity ───────────────────────────────────────────────────── */
-      case 2:
+      /* ── 4 Goal ──────────────────────────────────────────────────────── */
+      case 4:
         return (
-          <div className="space-y-6">
+          <div className="space-y-4" dir={rtl ? 'rtl' : 'ltr'}>
             <div>
               <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white leading-tight">Comment tu t&apos;appelles ?</h2>
-            </div>
-
-            <input type="text" value={name} onChange={e => setName(e.target.value)}
-              placeholder="Ton prénom"
-              className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-5 py-4 text-white text-xl font-display font-bold text-center focus:border-cali-orange/50 focus:outline-none" autoFocus />
-
-            <div>
-              <p className="text-xs text-gray-500 font-semibold mb-3">Genre</p>
-              <div className="grid grid-cols-3 gap-2">
-                {([['male', '👨', 'Homme'], ['female', '👩', 'Femme'], ['other', '🧑', 'Autre']] as [Gender, string, string][]).map(([g, icon, label]) => (
-                  <button key={g} onClick={() => setGender(g)}
-                    className={`py-4 rounded-2xl text-sm font-semibold transition-all flex flex-col items-center gap-1.5 ${gender === g ? 'bg-cali-orange/15 border border-cali-orange/50 text-white' : 'bg-white/[0.04] border border-white/8 text-gray-500'}`}>
-                    <span className="text-2xl">{icon}</span>
-                    <span className="text-xs">{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500 font-semibold mb-3">Âge</p>
-              <div className="bg-white/[0.03] border border-white/6 rounded-2xl p-4 flex justify-center">
-                <DrumRoll value={age} onChange={setAge} min={14} max={80} unit="ans" label="Âge" />
-              </div>
-            </div>
-          </div>
-        );
-
-      /* ── 3 Goal ───────────────────────────────────────────────────────── */
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white">Quel est ton objectif ?</h2>
-              <p className="text-sm text-gray-500 mt-1">Je vais personnaliser tout ton programme</p>
+              <h2 className="text-2xl font-display font-black text-white">{tr('goal_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('goal_subtitle')}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -590,20 +693,15 @@ export default function OnboardingPage() {
                 <button key={g} onClick={() => setGoal(g)}
                   className="relative overflow-hidden text-left active:scale-95 transition-transform"
                   style={{ borderRadius: '20px', height: '130px', border: goal === g ? `2px solid ${cfg.accent}` : '2px solid transparent', boxShadow: goal === g ? `0 0 24px ${cfg.accent}40` : 'none' }}>
-                  {/* Photo bg */}
                   <img src={cfg.photo} alt={cfg.label} className="absolute inset-0 w-full h-full object-cover"
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  {/* Gradient fallback */}
                   <div className="absolute inset-0 -z-10" style={{ background: cfg.gradient }} />
-                  {/* Dark overlay */}
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.1) 100%)' }} />
-                  {/* Check */}
                   {goal === g && (
                     <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: cfg.accent }}>
                       <Check size={13} color="#fff" />
                     </div>
                   )}
-                  {/* Text */}
                   <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p className="text-white font-bold text-sm leading-tight">{cfg.label}</p>
                     <p className="text-white/60 text-[10px] mt-0.5 leading-tight">{cfg.desc}</p>
@@ -614,21 +712,21 @@ export default function OnboardingPage() {
           </div>
         );
 
-      /* ── 4 Program Duration ───────────────────────────────────────────── */
-      case 4:
+      /* ── 5 Program Duration ──────────────────────────────────────────── */
+      case 5:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4" dir={rtl ? 'rtl' : 'ltr'}>
             <div>
               <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white">Durée du programme</h2>
-              <p className="text-sm text-gray-500 mt-1">Tu recevras une lettre au jour 30</p>
+              <h2 className="text-2xl font-display font-black text-white">{tr('duration_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('duration_subtitle')}</p>
             </div>
 
             <div className="space-y-3">
               {([
-                [30, PHOTO('beginner'),  'linear-gradient(135deg,#0d0800 0%,#2a1500 100%)', '#FF8C42', '30 jours', 'Résultats visibles rapidement'],
-                [60, PHOTO('advanced'),  'linear-gradient(135deg,#080010 0%,#1a0030 100%)', '#FF6B35', '60 jours', 'Nouvelles habitudes solidement installées'],
-                [90, PHOTO('summary'),   'linear-gradient(135deg,#000814 0%,#001433 100%)', '#FF2D55', '90 jours', 'Transformation complète, corps et mental'],
+                [30, PHOTO('beginner'),  'linear-gradient(135deg,#0d0800 0%,#2a1500 100%)', '#FF8C42', tr('duration_30_title'), tr('duration_30_desc')],
+                [60, PHOTO('advanced'),  'linear-gradient(135deg,#080010 0%,#1a0030 100%)', '#FF6B35', tr('duration_60_title'), tr('duration_60_desc')],
+                [90, PHOTO('summary'),   'linear-gradient(135deg,#000814 0%,#001433 100%)', '#FF2D55', tr('duration_90_title'), tr('duration_90_desc')],
               ] as [30|60|90, string, string, string, string, string][]).map(([d, photo, grad, accent, title, detail]) => (
                 <button key={d} onClick={() => setProgramDuration(d)}
                   className="relative w-full overflow-hidden text-left active:scale-[0.98] transition-transform"
@@ -657,28 +755,28 @@ export default function OnboardingPage() {
           </div>
         );
 
-      /* ── 5 Body data ──────────────────────────────────────────────────── */
-      case 5:
+      /* ── 6 Body data ──────────────────────────────────────────────────── */
+      case 6:
         return (
-          <div className="space-y-5">
+          <div className="space-y-5" dir={rtl ? 'rtl' : 'ltr'}>
             <div>
               <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white">Tes mensurations</h2>
-              <p className="text-sm text-gray-500 mt-1">Pour calculer tes besoins précis</p>
+              <h2 className="text-2xl font-display font-black text-white">{tr('body_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('body_subtitle')}</p>
             </div>
 
             <div className="bg-white/[0.03] border border-white/6 rounded-2xl p-4">
               <div className="flex justify-around">
-                <DrumRoll value={weight} onChange={setWeight} min={30} max={200} unit="kg" label="Poids actuel" />
+                <DrumRoll value={weight} onChange={setWeight} min={30} max={200} unit="kg" label={tr('body_current_weight')} />
                 <div className="w-px bg-white/6" />
-                <DrumRoll value={height} onChange={setHeight} min={120} max={220} unit="cm" label="Taille" />
+                <DrumRoll value={height} onChange={setHeight} min={120} max={220} unit="cm" label={tr('body_height')} />
                 <div className="w-px bg-white/6" />
-                <DrumRoll value={targetWeight} onChange={setTargetWeight} min={30} max={200} unit="kg" label="Objectif" />
+                <DrumRoll value={targetWeight} onChange={setTargetWeight} min={30} max={200} unit="kg" label={tr('body_target')} />
               </div>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500 font-semibold mb-3">Séances par semaine</p>
+              <p className="text-xs text-gray-500 font-semibold mb-3">{tr('body_sessions')}</p>
               <div className="flex gap-2">
                 {[2, 3, 4, 5, 6].map(n => (
                   <button key={n} onClick={() => setSessionsPerWeek(n)}
@@ -691,21 +789,21 @@ export default function OnboardingPage() {
           </div>
         );
 
-      /* ── 6 Level ──────────────────────────────────────────────────────── */
-      case 6:
+      /* ── 7 Level ──────────────────────────────────────────────────────── */
+      case 7:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4" dir={rtl ? 'rtl' : 'ltr'}>
             <div>
               <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white">Ton niveau sportif</h2>
-              <p className="text-sm text-gray-500 mt-1">J&apos;ajuste l&apos;intensité en temps réel</p>
+              <h2 className="text-2xl font-display font-black text-white">{tr('level_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('level_subtitle')}</p>
             </div>
 
             <div className="space-y-3">
               {([
-                ['beginner',     PHOTO('beginner'), 'linear-gradient(135deg,#001a06 0%,#003510 100%)', '#00C853', 'Débutant',      'Peu ou pas d\'expérience sportive'],
-                ['intermediate', PHOTO('welcome'),  'linear-gradient(135deg,#000d1a 0%,#001433 100%)', '#3B82F6', 'Intermédiaire', 'Sport régulier depuis quelques mois'],
-                ['advanced',     PHOTO('advanced'), 'linear-gradient(135deg,#1a0400 0%,#3d0d00 100%)', '#FF6B35', 'Avancé',        'Entraînement intensif depuis +1 an'],
+                ['beginner',     PHOTO('beginner'), 'linear-gradient(135deg,#001a06 0%,#003510 100%)', '#00C853', tr('level_beginner'), tr('level_beginner_desc')],
+                ['intermediate', PHOTO('advanced'), 'linear-gradient(135deg,#000d1a 0%,#001433 100%)', '#3B82F6', tr('level_intermediate'), tr('level_intermediate_desc')],
+                ['advanced',     PHOTO('summary'),  'linear-gradient(135deg,#1a0400 0%,#3d0d00 100%)', '#FF6B35', tr('level_advanced'), tr('level_advanced_desc')],
               ] as [Difficulty, string, string, string, string, string][]).map(([l, photo, grad, accent, title, desc]) => (
                 <button key={l} onClick={() => setLevel(l)}
                   className="relative w-full overflow-hidden text-left active:scale-[0.98] transition-transform"
@@ -731,74 +829,74 @@ export default function OnboardingPage() {
           </div>
         );
 
-      /* ── 7 Health ─────────────────────────────────────────────────────── */
-      case 7:
+      /* ── 8 Health ─────────────────────────────────────────────────────── */
+      case 8:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4" dir={rtl ? 'rtl' : 'ltr'}>
             <div>
               <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white">Ton corps</h2>
-              <p className="text-sm text-gray-500 mt-1">J&apos;adapte chaque exercice automatiquement</p>
+              <h2 className="text-2xl font-display font-black text-white">{tr('health_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('health_subtitle')}</p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-400 font-semibold mb-2">Blessures</p>
+              <p className="text-xs text-gray-400 font-semibold mb-2">{tr('health_injuries')}</p>
               <div className="grid grid-cols-2 gap-2">
                 {INJURY_OPTIONS.map(o => (
                   <Chip key={o.id} sel={injuries.includes(o.id)} onClick={() => toggleInjury(o.id)}>
-                    <span>{o.icon}</span>{o.label}
+                    <span>{o.icon}</span>{tr(`injury_${o.id}` as Parameters<typeof t>[1])}
                   </Chip>
                 ))}
               </div>
               <button onClick={() => { setNoInjury(true); setInjuries([]); }}
                 className={`mt-2 w-full p-3 rounded-xl text-sm font-semibold transition-all ${noInjury ? 'bg-green-500/15 border border-green-500/40 text-green-400' : 'bg-white/[0.04] border border-white/8 text-gray-400'}`}>
-                {noInjury ? '✓ Aucune blessure' : 'Je n\'ai aucune blessure'}
+                {noInjury ? tr('health_no_injury_confirm') : tr('health_no_injury')}
               </button>
             </div>
 
             <div>
-              <p className="text-xs text-gray-400 font-semibold mb-2">Limitations (optionnel)</p>
+              <p className="text-xs text-gray-400 font-semibold mb-2">{tr('health_limitations')}</p>
               <div className="grid grid-cols-2 gap-1.5">
-                {ALL_LIMITATION_OPTIONS.filter(l => gender !== 'male' || l !== 'Grossesse').map(l => (
-                  <Chip key={l} sel={limitations.includes(l)} onClick={() => toggleLimitation(l)}>{l}</Chip>
+                {ALL_LIMITATION_OPTIONS_I18N.filter(l => gender !== 'male' || l.key !== 'lim_pregnancy').map(l => (
+                  <Chip key={l.key} sel={limitations.includes(l.key)} onClick={() => toggleLimitation(l.key)}>{tr(l.key as Parameters<typeof t>[1])}</Chip>
                 ))}
               </div>
             </div>
 
             <div>
-              <p className="text-xs text-gray-400 font-semibold mb-2">Douleurs chroniques (optionnel)</p>
+              <p className="text-xs text-gray-400 font-semibold mb-2">{tr('health_chronic')}</p>
               <div className="grid grid-cols-2 gap-1.5">
-                {CHRONIC_PAIN_OPTIONS.map(c => (
-                  <Chip key={c} sel={chronicPain.includes(c)} onClick={() => toggleChronicPain(c)}>{c}</Chip>
+                {CHRONIC_PAIN_OPTIONS_I18N.map(c => (
+                  <Chip key={c.key} sel={chronicPain.includes(c.key)} onClick={() => toggleChronicPain(c.key)}>{tr(c.key as Parameters<typeof t>[1])}</Chip>
                 ))}
               </div>
             </div>
           </div>
         );
 
-      /* ── 8 Alimentation ───────────────────────────────────────────────── */
-      case 8:
+      /* ── 9 Nutrition ──────────────────────────────────────────────────── */
+      case 9:
         return (
-          <div className="space-y-5">
+          <div className="space-y-5" dir={rtl ? 'rtl' : 'ltr'}>
             <div>
               <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white">Alimentation</h2>
-              <p className="text-sm text-gray-500 mt-1">Optionnel — j&apos;adapte les recettes</p>
+              <h2 className="text-2xl font-display font-black text-white">{tr('nutrition_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('nutrition_subtitle')}</p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-400 font-semibold mb-2">Régime alimentaire</p>
+              <p className="text-xs text-gray-400 font-semibold mb-2">{tr('nutrition_diet')}</p>
               <div className="grid grid-cols-2 gap-2">
-                {DIET_OPTIONS.map(d => (
+                {DIET_OPTIONS_I18N.map(d => (
                   <Chip key={d.id} sel={dietaryPrefs.includes(d.id)} onClick={() => toggleDiet(d.id)}>
-                    <span>{d.icon}</span>{d.label}
+                    <span>{d.icon}</span>{tr(`diet_${d.id}` as Parameters<typeof t>[1])}
                   </Chip>
                 ))}
               </div>
             </div>
 
             <div>
-              <p className="text-xs text-gray-400 font-semibold mb-2">Allergies</p>
+              <p className="text-xs text-gray-400 font-semibold mb-2">{tr('nutrition_allergies')}</p>
               <div className="flex flex-wrap gap-2">
                 {ALLERGY_OPTIONS.map(a => (
                   <button key={a} onClick={() => toggleAllergy(a)}
@@ -810,32 +908,33 @@ export default function OnboardingPage() {
             </div>
 
             <div className="bg-cali-orange/5 border border-cali-orange/15 rounded-2xl px-4 py-3">
-              <p className="text-xs text-gray-400">💡 Modifiable à tout moment dans ton profil</p>
+              <p className="text-xs text-gray-400">{tr('nutrition_tip')}</p>
             </div>
           </div>
         );
 
-      /* ── 9 Personal Letter ────────────────────────────────────────────── */
-      case 9:
+      /* ── 10 Personal Letter ───────────────────────────────────────────── */
+      case 10:
         return (
-          <div className="space-y-5">
+          <div className="space-y-5" dir={rtl ? 'rtl' : 'ltr'}>
             <div>
               <p className="text-xs text-cali-orange font-bold tracking-widest uppercase mb-1">Calix</p>
-              <h2 className="text-2xl font-display font-black text-white">Une lettre à toi-même</h2>
-              <p className="text-sm text-gray-500 mt-1">Tu la reliras au jour 30 de ton programme</p>
+              <h2 className="text-2xl font-display font-black text-white">{tr('letter_title')}</h2>
+              <p className="text-sm text-gray-500 mt-1">{tr('letter_subtitle')}</p>
             </div>
 
             <textarea value={personalLetter} onChange={e => setPersonalLetter(e.target.value)} rows={7}
-              placeholder={'Cher(e) moi du futur,\n\nJe commence ce programme parce que...'}
-              className="w-full bg-white/[0.04] border border-white/8 rounded-2xl px-4 py-4 text-white text-sm leading-relaxed focus:border-cali-orange/30 focus:outline-none resize-none" />
+              placeholder={tr('letter_placeholder')}
+              className="w-full bg-white/[0.04] border border-white/8 rounded-2xl px-4 py-4 text-white text-sm leading-relaxed focus:border-cali-orange/30 focus:outline-none resize-none"
+              dir={rtl ? 'rtl' : 'ltr'} />
 
             <div className="bg-white/[0.03] border border-white/6 rounded-2xl px-4 py-3 flex items-center gap-3">
               <span className="text-lg">🔒</span>
-              <p className="text-xs text-gray-400">Cette lettre sera verrouillée et débloquée au <span className="text-cali-orange font-bold">jour 30</span></p>
+              <p className="text-xs text-gray-400">{tr('letter_locked')} <span className="text-cali-orange font-bold">{tr('letter_day30')}</span></p>
             </div>
 
             <button onClick={() => setStep(step + 1)} className="text-xs text-gray-600 w-full text-center">
-              Passer cette étape →
+              {tr('letter_skip')}
             </button>
           </div>
         );
@@ -843,8 +942,7 @@ export default function OnboardingPage() {
       /* ── Summary ──────────────────────────────────────────────────────── */
       default:
         return (
-          <div className="flex flex-col h-full -mx-5 -mt-5">
-            {/* Summary hero */}
+          <div className="flex flex-col h-full -mx-5 -mt-5" dir={rtl ? 'rtl' : 'ltr'}>
             <div className="relative h-[36vh] flex-shrink-0 overflow-hidden" style={{ borderRadius: '0 0 36px 36px' }}>
               <img src={GOAL_CONFIG[goal]?.photo || PHOTO('summary')} alt="" className="w-full h-full object-cover"
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
@@ -855,22 +953,21 @@ export default function OnboardingPage() {
                   <CalixOrb size={36} />
                   <div>
                     <p className="text-[10px] font-black tracking-widest uppercase text-cali-orange">Calix</p>
-                    <p className="text-white font-black text-xl leading-tight">Tout est prêt{name ? `, ${name}` : ''} !</p>
+                    <p className="text-white font-black text-xl leading-tight">{tr('summary_ready')}{name ? `, ${name}` : ''} !</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="flex-1 px-5 pt-5 pb-4 space-y-3 overflow-y-auto">
-              {/* Stats recap */}
               <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
                 {[
-                  ['Objectif', GOAL_CONFIG[goal]?.label],
-                  ['Programme', `${programDuration} jours · ${sessionsPerWeek}× / semaine`],
-                  ['Niveau', { beginner: 'Débutant', intermediate: 'Intermédiaire', advanced: 'Avancé' }[level]],
-                  ['Poids', `${weight} kg → ${targetWeight} kg (${height} cm)`],
-                  ['Blessures', noInjury ? 'Aucune' : injuries.map(i => INJURY_OPTIONS.find(o => o.id === i)?.label).join(', ')],
-                  ['Alimentation', dietaryPrefs.length === 0 ? 'Standard' : dietaryPrefs.map(d => DIET_OPTIONS.find(o => o.id === d)?.label).join(', ')],
+                  [tr('summary_goal'), GOAL_CONFIG[goal]?.label],
+                  [tr('summary_program'), `${programDuration} · ${sessionsPerWeek}×`],
+                  [tr('summary_level'), tr(`lvl_${level}` as Parameters<typeof t>[1])],
+                  [tr('summary_weight'), `${weight} kg → ${targetWeight} kg (${height} cm)`],
+                  [tr('summary_injuries'), noInjury ? tr('summary_none') : injuries.map(i => INJURY_OPTIONS.find(o => o.id === i)?.id).filter(Boolean).map(id => tr(`injury_${id}` as Parameters<typeof t>[1])).join(', ')],
+                  [tr('summary_nutrition'), dietaryPrefs.length === 0 ? tr('summary_standard') : dietaryPrefs.map(d => tr(`diet_${d}` as Parameters<typeof t>[1])).join(', ')],
                 ].map(([label, value]) => (
                   <div key={label} className="flex justify-between items-center py-0.5" style={{ borderBottom: '1px solid var(--border)' }}>
                     <span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>{label}</span>
@@ -879,7 +976,6 @@ export default function OnboardingPage() {
                 ))}
               </div>
 
-              {/* Premium badge */}
               <div className="rounded-2xl p-4 flex items-center gap-4"
                 style={{ background: 'linear-gradient(135deg, rgba(255,107,53,0.12) 0%, rgba(255,45,85,0.08) 100%)', border: '1px solid rgba(255,107,53,0.25)' }}>
                 <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -887,8 +983,8 @@ export default function OnboardingPage() {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 </div>
                 <div>
-                  <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>7 jours Premium offerts</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Toutes les fonctionnalités débloquées</p>
+                  <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{tr('summary_premium')}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{tr('summary_premium_desc')}</p>
                 </div>
               </div>
             </div>
@@ -899,14 +995,16 @@ export default function OnboardingPage() {
 
   const isLastStep = step === TOTAL_STEPS;
   const progress = step / TOTAL_STEPS;
+  // Step 2 (Calix video) handles its own full-screen UI + navigation
+  if (step === 2) return renderStep();
 
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: 'var(--bg)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
 
-      {/* Progress bar */}
+      {/* Progress bar — hidden on language screen (step 0) */}
       {step > 0 && (
         <div className="px-5 pt-5 pb-3 flex items-center gap-3 flex-shrink-0">
-          <button onClick={() => setStep(step === 2 ? 1 : step - 1)}
+          <button onClick={() => setStep(step - 1)}
             className="w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-transform"
             style={{ background: 'var(--overlay-card)', border: '1px solid var(--border)' }}>
             <ChevronLeft size={18} style={{ color: 'var(--text-secondary)' }} />
@@ -935,21 +1033,19 @@ export default function OnboardingPage() {
             {authLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Connexion...</span>
+                <span>{tr('connecting')}</span>
               </>
-            ) : step === 0 ? (
-              <>Commencer <ChevronRight size={18} /></>
-            ) : step === 1 ? (
-              <>{isLogin ? 'Se connecter' : 'Créer mon compte'} <ChevronRight size={18} /></>
+            ) : step === 3 ? (
+              <>{isLogin ? tr('auth_login_btn') : tr('auth_register_btn')} <ChevronRight size={18} /></>
             ) : (
-              <>Continuer <ChevronRight size={18} /></>
+              <>{tr('continue')} <ChevronRight size={18} /></>
             )}
           </button>
         ) : (
           <button onClick={handleFinish}
             className="w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
             style={{ background: 'linear-gradient(135deg,#FF6B35,#FF2D55)', color: '#fff', boxShadow: '0 6px 28px rgba(255,107,53,0.45)' }}>
-            <Sparkles size={18} /> Commencer mon programme
+            <Sparkles size={18} /> {tr('summary_start')}
           </button>
         )}
       </div>
