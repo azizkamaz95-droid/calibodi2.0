@@ -248,13 +248,13 @@ function CalixVideoStep({ lang, name, onNext }: { lang: import('@/lib/languageSt
     const run = async () => {
       globalStart.current = Date.now();
       // Part 1: "Bonjour" / "Hey" / "Hola" / "مرحباً"
-      await playAudio(`/audio/calix/onboarding_${lang}_1.mp3`);
+      await playAudio(`/audio/calix/${lang}_onboarding_1.mp3`);
       // Brief pause then name via Web Speech
       await new Promise(r => setTimeout(r, 180));
       await speakName();
       await new Promise(r => setTimeout(r, 200));
       // Part 2: rest of intro
-      await playAudio(`/audio/calix/onboarding_${lang}_2.mp3`);
+      await playAudio(`/audio/calix/${lang}_onboarding_2.mp3`);
       cancelAnimationFrame(raf.id);
       setProgress(1);
       setTimeout(finish, 400);
