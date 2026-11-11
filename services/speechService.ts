@@ -1,13 +1,36 @@
 // ═══════════════════════════════════════════════════════════════
-// CALIX VOICE ENGINE v7 — TTS natif uniquement, file d'attente
-// Une seule voix cohérente, zéro chevauchement
+// CALIX VOICE ENGINE v8 — MP3 pré-générés ElevenLabs + fallback TTS
 // ═══════════════════════════════════════════════════════════════
 
 let speechEnabled = true;
 let isReady = false;
 let TTS: any = null;
-let femaleVoiceIndex: number | undefined = undefined; // index voix féminine (iOS)
+let femaleVoiceIndex: number | undefined = undefined;
 let isIOS = false;
+
+// ─── Langue active ────────────────────────────────────────────
+let currentLang: string = 'fr';
+export function setLang(lang: string) { currentLang = lang; }
+
+// ─── Lecture MP3 pré-généré ───────────────────────────────────
+let activeAudio: HTMLAudioElement | null = null;
+
+async function playCalixMP3(id: string): Promise<void> {
+  if (!speechEnabled || typeof window === 'undefined') return;
+  return new Promise((resolve) => {
+    if (activeAudio) { activeAudio.pause(); activeAudio = null; }
+    const audio = new Audio(`/audio/calix/${currentLang}_${id}.mp3`);
+    activeAudio = audio;
+    audio.onended = () => { activeAudio = null; resolve(); };
+    audio.onerror = () => { activeAudio = null; resolve(); }; // fallback silencieux
+    audio.play().catch(() => { activeAudio = null; resolve(); });
+  });
+}
+
+// ─── Stop MP3 en cours ────────────────────────────────────────
+function stopAudio() {
+  if (activeAudio) { activeAudio.pause(); activeAudio = null; }
+}
 
 // ─── File d'attente ───────────────────────────────────────────
 let speakChain: Promise<void> = Promise.resolve();
@@ -88,6 +111,7 @@ export async function stopSpeaking() {
   cueToken++;
   queueSize = 0;
   speakChain = Promise.resolve();
+  stopAudio();
   try {
     if (TTS) {
       await TTS.stop();
@@ -287,63 +311,29 @@ export async function speakSessionStart(mode: string) {
   await stopSpeaking();
   exerciseIndex = 0;
 
-  const goalPhrases: Record<string, string[]> = {
-    weight_loss: [
-      "C'est parti. Aujourd'hui on brûle, on transpire, on avance.",
-      "Séance brûle-graisses. Chaque calorie compte.",
-      "On attaque. Objectif : faire travailler ton métabolisme à fond.",
-    ],
-    muscle: [
-      "C'est l'heure de construire. Chaque répétition sculpte ton corps.",
-      "Séance renforcement. On cherche la qualité du mouvement.",
-      "On y va. Contrôle chaque mouvement, ressens chaque muscle.",
-    ],
-    endurance: [
-      "Séance endurance. On va chercher le souffle et la résistance.",
-      "Aujourd'hui on repousse tes limites cardio.",
-      "C'est parti. Rythme régulier, respiration contrôlée.",
-    ],
-    health: [
-      "C'est parti. On prend soin de ton corps aujourd'hui.",
-      "Une séance pour se sentir bien dans son corps.",
-      "On y va en douceur mais avec détermination.",
-    ],
-  };
-
-  const modePhrases: Record<string, string> = {
-    voyage: "Séance adaptée, pas besoin de matériel.",
-    fatigue: "On écoute ton corps aujourd'hui, pas de pression.",
-    express: "Séance courte mais intense, chaque seconde compte.",
-    cycle: "Séance adaptée à ta phase actuelle. On respecte ton rythme.",
-  };
-
-  // Await directement — pas de queue — pour que l'intro soit complète
-  // avant que startExerciseAtIndex ne s'exécute et vide la queue
-  const name = ctx.name ? ` ${ctx.name}` : '';
-  await say(`Prêt${name} ?`, 'fr-FR', 0.9);
-  await wait(400);
-  await say(pick(goalPhrases[ctx.goal] || goalPhrases.health), 'fr-FR', 0.92);
-
-  if (mode !== 'normal' && modePhrases[mode]) {
+  // Prénom dit par TTS natif, puis phrases de démarrage en MP3
+  if (ctx.name) {
+    await say(`${ctx.name} !`, currentLang === 'ar' ? 'ar-SA' : currentLang === 'es' ? 'es-ES' : currentLang === 'en' ? 'en-US' : 'fr-FR', 0.9);
     await wait(300);
-    await say(modePhrases[mode]);
   }
 
-  if (ctx.limitations.includes('Grossesse')) {
-    await say("Tous les exercices sont sécurisés pour toi. Pas de mouvement sur le ventre, que de la douceur.");
+  const goalKey = ctx.goal === 'weight_loss' ? 'weightloss' : ctx.goal;
+  await playCalixMP3(`start_${goalKey}_${Math.ceil(Math.random() * 3)}`);
+
+  if (mode !== 'normal' && ['voyage', 'fatigue', 'express', 'cycle'].includes(mode)) {
+    await wait(300);
+    await playCalixMP3(`start_mode_${mode}`);
+  }
+
+  if (ctx.limitations.some(l => ['Grossesse', 'Pregnancy', 'Embarazo', 'حمل'].includes(l))) {
+    await wait(300);
+    await playCalixMP3('injury_preg');
   } else if (ctx.injuries.length > 1) {
-    await say("J'ai adapté la séance pour tes zones sensibles. Écoute ton corps, on ne force jamais sur la douleur.");
+    await wait(300);
+    await playCalixMP3('injury_multi');
   } else if (ctx.injuries.length === 1) {
-    const injuryPhrases: Record<string, string> = {
-      knee:     "J'ai adapté la séance pour protéger ton genou. Si tu ressens la moindre douleur, arrête-toi.",
-      back:     "J'ai adapté la séance pour protéger ton dos. Si tu ressens la moindre douleur, arrête-toi.",
-      shoulder: "J'ai adapté la séance pour protéger ton épaule. Si tu ressens la moindre douleur, arrête-toi.",
-      wrist:    "J'ai adapté la séance pour protéger ton poignet. Si tu ressens la moindre douleur, arrête-toi.",
-      hip:      "J'ai adapté la séance pour protéger ta hanche. Si tu ressens la moindre douleur, arrête-toi.",
-      ankle:    "J'ai adapté la séance pour protéger ta cheville. Si tu ressens la moindre douleur, arrête-toi.",
-    };
-    const phrase = injuryPhrases[ctx.injuries[0]];
-    if (phrase) await say(phrase);
+    await wait(300);
+    await playCalixMP3(`injury_single_${ctx.injuries[0]}`);
   }
 }
 
@@ -352,23 +342,12 @@ export async function speakSessionStart(mode: string) {
 // ═══════════════════════════════════════════════════════════════
 export async function speakWarmupToMain() {
   await stopSpeaking();
-  enqueue(() => say(pickUnique([
-    "Bien. Maintenant on passe aux choses sérieuses.",
-    "Échauffement terminé. Tes muscles sont prêts, on attaque le bloc principal.",
-    "Parfait, le corps est prêt. On monte en intensité maintenant.",
-    "Bien échauffé. C'est maintenant que ça commence vraiment.",
-    "Les muscles sont chauds. On passe à l'entraînement.",
-  ])));
+  enqueue(() => playCalixMP3(`warmup_to_main_${Math.ceil(Math.random() * 5)}`));
 }
 
 export async function speakMainToCooldown() {
   await stopSpeaking();
-  enqueue(() => say(pickUnique([
-    "Le plus dur est fait. On termine avec quelques étirements pour bien récupérer.",
-    "Excellent travail. Place au retour au calme, c'est aussi important que l'effort.",
-    "Bravo, bloc principal terminé. On étire les muscles qui ont travaillé.",
-    "La partie intense est finie. Prends le temps de t'étirer, ton corps en a besoin.",
-  ])));
+  enqueue(() => playCalixMP3(`main_to_cooldown_${Math.ceil(Math.random() * 4)}`));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -377,17 +356,16 @@ export async function speakMainToCooldown() {
 export async function speakSetAnnouncement(currentSet: number, totalSets: number) {
   await stopSpeaking();
   if (currentSet === totalSets) {
-    enqueue(() => say("Dernière série."));
+    enqueue(() => playCalixMP3('set_complete_1'));
   } else {
-    enqueue(() => say(pick(["Go.", "On enchaîne.", "C'est reparti."])));
+    enqueue(() => playCalixMP3('set_complete_2'));
   }
 }
 
 export function speakSetComplete(setsRemaining: number) {
   enqueue(async () => {
-    if (setsRemaining === 1) await say("Encore une seule. Donne tout.");
-    else if (setsRemaining > 1) await say(pick(["Bien. On continue.", "C'est bon. On enchaîne.", "Parfait."]));
-    else await say(pick(["Exercice terminé.", "C'est fait. On passe au suivant.", "Terminé. Beau travail.", "Validé."]));
+    if (setsRemaining === 1) await playCalixMP3('set_complete_1');
+    else await playCalixMP3('set_complete_2');
   });
 }
 
@@ -396,27 +374,15 @@ export function speakSetComplete(setsRemaining: number) {
 // ═══════════════════════════════════════════════════════════════
 export async function speakRestStart(restTime: number) {
   const progress = totalExercises > 0 ? exerciseIndex / totalExercises : 0;
-
-  let phrases: string[];
+  let id: string;
   if (progress < 0.25) {
-    phrases = [
-      "Repos.", "Respire calmement.", "Pause. Secoue les bras, détends les épaules.",
-      "Souffle.", "Bois de l'eau si tu en as besoin.",
-    ];
+    id = `rest_mid_${Math.ceil(Math.random() * 5)}`;
   } else if (progress < 0.7) {
-    phrases = [
-      "Repos. Tu es sur la bonne voie.", "Pause bien méritée.",
-      "Souffle un coup. La moitié est faite.", "Profite-en pour relâcher les tensions.",
-      "Repos. Chaque exercice que tu termines te rapproche du résultat.",
-    ];
+    id = `rest_mid_${Math.ceil(Math.random() * 5)}`;
   } else {
-    phrases = [
-      "Repos. La fin approche, tiens bon.", "Plus que quelques exercices.",
-      "Dernière ligne droite.", "Souffle. Tu as presque fini, ne lâche rien.",
-      "Le plus dur est derrière toi.",
-    ];
+    id = `rest_end_${Math.ceil(Math.random() * 5)}`;
   }
-  enqueue(() => say(pickUnique(phrases)));
+  enqueue(() => playCalixMP3(id));
   return speakChain;
 }
 
@@ -482,30 +448,24 @@ export function speakPostureCue(exerciseId: string, instruction?: string) {
 // COUNTDOWN
 // ═══════════════════════════════════════════════════════════════
 export async function speakCountdown(seconds: number) {
-  if (seconds === 5) enqueue(() => say("Cinq."));
-  else if (seconds === 3) enqueue(() => say("Trois."));
-  else if (seconds === 1) enqueue(() => say("Et un !"));
+  if (seconds === 5) enqueue(() => playCalixMP3('countdown_5'));
+  else if (seconds === 3) enqueue(() => playCalixMP3('countdown_3'));
+  else if (seconds === 1) enqueue(() => playCalixMP3('countdown_1'));
 }
 
 // ═══════════════════════════════════════════════════════════════
 // MOTIVATION — optionnel
 // ═══════════════════════════════════════════════════════════════
 export function speakMotivation() {
-  const general = [
-    "Continue exactement comme ça.",
-    "Chaque répétition construit la meilleure version de toi.",
-    "La plupart des gens ont déjà abandonné. Pas toi.",
-    "La discipline bat toujours la motivation.",
-    "Ton futur toi te remercie pour cet effort.",
-  ];
-  const goalPhrases: Record<string, string[]> = {
-    weight_loss: ["Ton métabolisme tourne à plein régime là.", "Chaque goutte de sueur est du gras qui s'en va.", "Continue, ton corps est en train de se transformer."],
-    muscle:      ["Tes muscles grandissent en ce moment même.", "La brûlure que tu ressens, c'est la progression.", "Contrôle, tension, résultat."],
-    endurance:   ["Ton cœur devient plus efficace à chaque séance.", "Tu repousses tes limites un peu plus loin.", "La résistance se construit dans l'inconfort."],
-    health:      ["Tu fais le meilleur investissement possible : ta santé.", "Chaque mouvement est un cadeau pour ton corps.", "Tu te sentiras tellement bien après."],
+  const generalIds = ['motivation_1', 'motivation_2', 'motivation_3', 'motivation_4', 'motivation_5'];
+  const goalIds: Record<string, string[]> = {
+    weight_loss: ['motivation_wl_1', 'motivation_wl_2'],
+    muscle:      ['motivation_m_1', 'motivation_m_2'],
+    endurance:   ['motivation_e_1', 'motivation_e_2'],
+    health:      ['motivation_h_1', 'motivation_h_2', 'motivation_end'],
   };
-  const pool = [...general, ...(goalPhrases[ctx.goal] || [])];
-  enqueueOptional(() => say(pickUnique(pool)));
+  const pool = [...generalIds, ...(goalIds[ctx.goal] || [])];
+  enqueueOptional(() => playCalixMP3(pick(pool)));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -513,15 +473,7 @@ export function speakMotivation() {
 // ═══════════════════════════════════════════════════════════════
 export async function speakSessionComplete(_durationMin: number, _calories: number) {
   await stopSpeaking();
-  const name = ctx.name ? `, ${ctx.name}` : '';
-  enqueue(async () => {
-    await say(pick([
-      `Séance terminée${name}. Tu peux être fier de toi.`,
-      `C'est fini${name}. Chapeau.`,
-      `Bravo${name}. Ton corps te remercie.`,
-      "C'est ça la régularité.",
-    ]));
-  });
+  enqueue(() => playCalixMP3(`session_done_${Math.ceil(Math.random() * 4)}`));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -530,25 +482,25 @@ export async function speakSessionComplete(_durationMin: number, _calories: numb
 export function speakInjuryWarning(exerciseId: string) {
   if (ctx.injuries.length === 0) return;
   const warnings: Record<string, Record<string, string>> = {
-    squat:         { knee: "Fais attention à tes genoux. Ne descends pas trop bas si tu ressens une gêne." },
-    lunge:         { knee: "Contrôle bien le mouvement pour protéger tes genoux." },
-    pushup:        { wrist: "Si tes poignets te font mal, fais l'exercice sur les poings.", shoulder: "Ne descends pas trop bas pour protéger ton épaule." },
-    knee_pushup:   { wrist: "Si tes poignets te font mal, fais l'exercice sur les poings." },
-    plank:         { wrist: "Reste sur les avant-bras pour épargner tes poignets.", back: "Contracte les abdos pour protéger ton dos." },
-    side_plank:    { shoulder: "Si ton épaule tire, fais la version sur le coude." },
-    superman_hold: { back: "Lève doucement. Ne force pas sur le bas du dos." },
-    wall_sit:      { knee: "Si la douleur au genou est trop forte, remonte un peu." },
-    burpee:        { knee: "Contrôle l'atterrissage pour protéger tes genoux." },
-    hollow_body:   { back: "Garde le bas du dos plaqué au sol." },
-    leg_raises:    { back: "Si ton dos se cambre, plie légèrement les genoux." },
-    jumping_jacks: { knee: "Si tes genoux sont sensibles, fais des pas latéraux à la place." },
-    high_knees:    { knee: "Monte à ton rythme, sans forcer." },
+    squat:         { knee: 'injury_knee',     },
+    lunge:         { knee: 'injury_knee_2',   },
+    pushup:        { wrist: 'injury_wrist', shoulder: 'injury_shoulder' },
+    knee_pushup:   { wrist: 'injury_wrist',   },
+    plank:         { wrist: 'injury_wrist', back: 'injury_back' },
+    side_plank:    { shoulder: 'injury_shoulder_2' },
+    superman_hold: { back: 'injury_back_2'   },
+    wall_sit:      { knee: 'injury_knee_3',  },
+    burpee:        { knee: 'injury_knee_2',  },
+    hollow_body:   { back: 'injury_back_3'   },
+    leg_raises:    { back: 'injury_back_3'   },
+    jumping_jacks: { knee: 'injury_knee_3',  },
+    high_knees:    { knee: 'injury_knee',    },
   };
   const w = warnings[exerciseId];
   if (!w) return;
   for (const injury of ctx.injuries) {
     if (w[injury]) {
-      enqueueOptional(() => say(w[injury]));
+      enqueueOptional(() => playCalixMP3(w[injury]));
       return;
     }
   }
@@ -572,8 +524,8 @@ export function speakGoalTip() {
 // RÉPÉTITIONS RESTANTES
 // ═══════════════════════════════════════════════════════════════
 export async function speakRepsRemaining(remaining: number) {
-  if (remaining === 3) enqueue(() => say("Plus que trois."));
-  else if (remaining === 1) enqueue(() => say("Dernière !"));
+  if (remaining === 3) enqueue(() => playCalixMP3('countdown_3'));
+  else if (remaining === 1) enqueue(() => playCalixMP3('countdown_1'));
 }
 
 // ═══════════════════════════════════════════════════════════════

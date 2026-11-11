@@ -6,12 +6,13 @@ import { useSleepStore } from '@/lib/sleepStore';
 import { useHydrationStore } from '@/lib/hydrationStore';
 import { useGameStore } from '@/lib/gameStore';
 import { useFreemiumStore } from '@/lib/freemiumStore';
+import { useLanguageStore } from '@/lib/languageStore';
 import { generateSession, estimateCalories } from '@/lib/calculations';
 import type { Exercise } from '@/lib/exerciseLibrary';
 import type { FeedbackLevel } from '@/lib/userStore';
 import { playStart, playEnd, playRest, playCountdown, playSessionComplete } from '@/services/audioService';
 import { vibrateStart, vibrateSetEnd, vibrateSessionEnd, vibrateRestEnd } from '@/services/vibrationService';
-import { initSpeech, setContext, setTotalExercises, stopSpeaking, enableSpeech, speakSessionStart, speakSetComplete, speakRestStart, speakSessionComplete, speakMotivation, speakAdaptationMessage, speakCountdown as speakCount, speakWarmupToMain, speakMainToCooldown, speakQuickName, speakSetAnnouncement, speakInjuryWarning, speakGoalTip, speak } from '@/services/speechService';
+import { initSpeech, setContext, setLang, setTotalExercises, stopSpeaking, enableSpeech, speakSessionStart, speakSetComplete, speakRestStart, speakSessionComplete, speakMotivation, speakAdaptationMessage, speakCountdown as speakCount, speakWarmupToMain, speakMainToCooldown, speakQuickName, speakSetAnnouncement, speakInjuryWarning, speakGoalTip, speak } from '@/services/speechService';
 import { X, Play, Pause, SkipForward, Timer, Trophy, Flame, Share2, Lock } from 'lucide-react';
 import { shareContent } from '@/components/ShareCard';
 
@@ -29,6 +30,7 @@ export default function SessionPage() {
   const sleepScore = useSleepStore((s) => s.getLatestScore());
   const addSessionBonus = useHydrationStore((s) => s.addSessionBonus);
   const expressDuration = useUserStore((s) => s.expressDuration);
+  const activeLang = useLanguageStore((s) => s.language);
   const isPremiumUser = useFreemiumStore((s) => s.isPremium);
   const canAccessVoice = isPremiumUser;
   const checkBadges = useGameStore((s) => s.checkBadges);
@@ -443,6 +445,7 @@ export default function SessionPage() {
                 localStorage.removeItem('calibodi-session-resume');
                 destroyedRef.current = false;
                 await initSpeech();
+                setLang(activeLang);
                 enableSpeech(canAccessVoice);
                 setContext({ name: profile.name, gender: profile.gender, goal: profile.goal, injuries: profile.injuries, limitations: profile.limitations || [], level: profile.level });
                 setTotalExercises(allExercises.length);
@@ -469,6 +472,7 @@ export default function SessionPage() {
               localStorage.removeItem('calibodi-session-resume');
               destroyedRef.current = false;
               await initSpeech();
+              setLang(activeLang);
               enableSpeech(canAccessVoice);
               setContext({ name: profile.name, gender: profile.gender, goal: profile.goal, injuries: profile.injuries, limitations: profile.limitations || [], level: profile.level });
               setTotalExercises(allExercises.length);
