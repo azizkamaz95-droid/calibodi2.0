@@ -33,7 +33,7 @@ const PHRASES_BY_LANG: Record<string, { id: string; text: string }[]> = {
   fr: [
     // Onboarding intro
     { id: 'onboarding_1', text: "Bonjour" },
-    { id: 'onboarding_2', text: "Je suis Calix, ton coach IA. Je vais analyser ton profil et créer un programme personnalisé rien que pour toi. Sport, nutrition, récupération — tout sera adapté à ton corps." },
+    { id: 'onboarding_2', text: "Je suis Calix, ta coach IA. Dans les prochaines étapes, je vais te poser quelques questions, analyser ton profil et créer un programme personnalisé rien que pour toi. Sport, nutrition, récupération — tout sera adapté à ton corps." },
     // Session start
     { id: 'start_weightloss_1', text: "C'est parti. Aujourd'hui on brûle, on transpire, on avance." },
     { id: 'start_weightloss_2', text: "Séance brûle-graisses. Chaque calorie compte." },
@@ -142,7 +142,7 @@ const PHRASES_BY_LANG: Record<string, { id: string; text: string }[]> = {
 
   en: [
     { id: 'onboarding_1', text: "Hey" },
-    { id: 'onboarding_2', text: "I'm Calix, your AI coach. I'll analyze your profile and build a personalized program just for you. Training, nutrition, recovery — everything tailored to your body." },
+    { id: 'onboarding_2', text: "I'm Calix, your AI coach. In the next steps, I'll ask you a few questions, analyze your profile and build a personalized program just for you. Training, nutrition, recovery — everything tailored to your body." },
     { id: 'start_weightloss_1', text: "Let's go. Today we burn, we sweat, we move forward." },
     { id: 'start_weightloss_2', text: "Fat-burning session. Every calorie counts." },
     { id: 'start_weightloss_3', text: "Attack mode. Goal: get your metabolism working at full speed." },
@@ -243,7 +243,7 @@ const PHRASES_BY_LANG: Record<string, { id: string; text: string }[]> = {
 
   es: [
     { id: 'onboarding_1', text: "Hola" },
-    { id: 'onboarding_2', text: "Soy Calix, tu coach de IA. Analizaré tu perfil y crearé un programa personalizado solo para ti. Entrenamiento, nutrición, recuperación — todo adaptado a tu cuerpo." },
+    { id: 'onboarding_2', text: "Soy Calix, tu coach de IA. En los próximos pasos, te haré algunas preguntas, analizaré tu perfil y crearé un programa personalizado solo para ti. Entrenamiento, nutrición, recuperación — todo adaptado a tu cuerpo." },
     { id: 'start_weightloss_1', text: "Vamos. Hoy quemamos, sudamos, avanzamos." },
     { id: 'start_weightloss_2', text: "Sesión quema-grasas. Cada caloría cuenta." },
     { id: 'start_weightloss_3', text: "Al ataque. Objetivo: hacer trabajar tu metabolismo a fondo." },
@@ -344,7 +344,7 @@ const PHRASES_BY_LANG: Record<string, { id: string; text: string }[]> = {
 
   ar: [
     { id: 'onboarding_1', text: "مرحباً" },
-    { id: 'onboarding_2', text: "أنا كاليكس، مدربك بالذكاء الاصطناعي. سأحلل ملفك وأنشئ برنامجاً مخصصاً لك. رياضة، تغذية، تعافٍ — كل شيء مكيّف مع جسمك." },
+    { id: 'onboarding_2', text: "أنا كاليكس، مدربتك بالذكاء الاصطناعي. في الخطوات التالية، سأطرح عليك بعض الأسئلة، أحلل ملفك وأنشئ برنامجاً مخصصاً لك. رياضة، تغذية، تعافٍ — كل شيء مكيّف مع جسمك." },
     { id: 'start_weightloss_1', text: "هيا بنا. اليوم نحرق، نتعرق، نتقدم." },
     { id: 'start_weightloss_2', text: "جلسة حرق دهون. كل سعرة حرارية تحسب." },
     { id: 'start_weightloss_3', text: "على الهجوم. الهدف: تشغيل الأيض بكامل طاقته." },
