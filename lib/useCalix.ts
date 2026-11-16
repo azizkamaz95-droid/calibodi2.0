@@ -7,7 +7,7 @@ import { useSleepStore } from './sleepStore';
 import { useHydrationStore } from './hydrationStore';
 import type { CalixContext } from '../netlify/functions/calix-coach';
 
-const CALIX_URL = 'https://calibodi-v02.netlify.app/.netlify/functions/calix-coach';
+const CALIX_URL = 'https://calibodi07.netlify.app/.netlify/functions/calix-coach';
 
 function getTimeOfDay(): CalixContext['timeOfDay'] {
   const h = new Date().getHours();
