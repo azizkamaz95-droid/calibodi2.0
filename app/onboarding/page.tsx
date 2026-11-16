@@ -366,12 +366,23 @@ export default function OnboardingPage() {
       const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
       const result = await FirebaseAuthentication.signInWithGoogle();
       const idToken = result.credential?.idToken;
-      if (!idToken) throw new Error('no-id-token');
-      const { GoogleAuthProvider, signInWithCredential } = await import('firebase/auth');
-      const credential = GoogleAuthProvider.credential(idToken);
-      const userCredential = await signInWithCredential(auth, credential);
-      const userEmail = userCredential.user.email || '';
-      const uid = userCredential.user.uid;
+      let userEmail = '';
+      let uid = '';
+      if (idToken) {
+        // Native (Android/iOS): sign in manually with the idToken
+        const { GoogleAuthProvider, signInWithCredential } = await import('firebase/auth');
+        const credential = GoogleAuthProvider.credential(idToken);
+        const userCredential = await signInWithCredential(auth, credential);
+        userEmail = userCredential.user.email || '';
+        uid = userCredential.user.uid;
+      } else {
+        // Web: plugin already completed Firebase sign-in, get current user
+        const { getAuth } = await import('firebase/auth');
+        const currentUser = getAuth().currentUser;
+        if (!currentUser) throw new Error('no-user');
+        userEmail = currentUser.email || '';
+        uid = currentUser.uid;
+      }
       setEmail(userEmail);
       try { await initUserTrial(uid); } catch (_) {}
       if (userEmail.toLowerCase() === 'azizkamaz95@gmail.com') {
