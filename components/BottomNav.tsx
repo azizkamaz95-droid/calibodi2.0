@@ -44,33 +44,42 @@ export default function BottomNav() {
     return null;
   }
 
-  const leftItems  = NAV_ITEMS.slice(0, 2);
-  const rightItems = NAV_ITEMS.slice(2);
-
   return (
     <>
       {showCalix && <CalixChat onClose={() => setShowCalix(false)} />}
 
+      <style>{`
+        @keyframes calix-pulse {
+          0%   { transform: scale(1);   opacity: 0.7; }
+          40%  { transform: scale(1.5); opacity: 0.3; }
+          60%  { transform: scale(1);   opacity: 0.7; }
+          80%  { transform: scale(1.4); opacity: 0.2; }
+          100% { transform: scale(1);   opacity: 0; }
+        }
+        .calix-ring-1 { animation: calix-pulse 1.4s ease-out infinite; }
+        .calix-ring-2 { animation: calix-pulse 1.4s ease-out 0.25s infinite; }
+      `}</style>
+
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0F]/95 backdrop-blur-xl border-t border-white/8">
         <div className="max-w-lg mx-auto flex justify-around items-center h-[68px] px-2">
 
-          {leftItems.map(item => <NavBtn key={item.path} item={item} pathname={pathname} router={router} />)}
+          {NAV_ITEMS.map(item => <NavBtn key={item.path} item={item} pathname={pathname} router={router} />)}
 
-          {/* Calix — bouton orb central */}
+          {/* Calix — bouton rond avec avatar + heartbeat */}
           <button onClick={() => setShowCalix(true)}
-            className="flex flex-col items-center justify-center gap-1 flex-shrink-0 px-3 active:scale-90 transition-all duration-200 -mt-5">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #FF6B35, #FF2D55)', boxShadow: '0 0 20px rgba(255,107,53,0.5), 0 4px 12px rgba(0,0,0,0.4)' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="3" fill="white" opacity="0.95" />
-                <circle cx="12" cy="12" r="6" stroke="white" strokeWidth="1.5" opacity="0.5" />
-                <circle cx="12" cy="12" r="9" stroke="white" strokeWidth="0.8" opacity="0.25" />
-              </svg>
+            className="flex flex-col items-center justify-center gap-1 flex-shrink-0 px-1 active:scale-90 transition-all duration-200">
+            <div className="relative flex items-center justify-center">
+              {/* Anneaux de pulsation */}
+              <div className="calix-ring-1 absolute inset-0 rounded-full border-2 border-cali-orange" style={{ margin: '-4px' }} />
+              <div className="calix-ring-2 absolute inset-0 rounded-full border border-cali-red" style={{ margin: '-8px' }} />
+              {/* Cercle principal avec image */}
+              <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-cali-orange"
+                style={{ boxShadow: '0 0 14px rgba(255,107,53,0.6)' }}>
+                <img src="/calix-avatar.png" alt="Calix" className="w-full h-full object-cover object-top" />
+              </div>
             </div>
             <span className="text-[10px] font-bold text-cali-orange tracking-wide">Calix</span>
           </button>
-
-          {rightItems.map(item => <NavBtn key={item.path} item={item} pathname={pathname} router={router} />)}
 
         </div>
         <div className="h-safe-area-bottom" />
