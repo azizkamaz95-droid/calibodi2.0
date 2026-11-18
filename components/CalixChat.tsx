@@ -46,28 +46,48 @@ export default function CalixChat({ onClose, initialMessage }: Props) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  const toggleMic = () => {
+  const toggleMic = async () => {
+    const { Capacitor } = await import('@capacitor/core');
+
     if (isListening) {
-      recognitionRef.current?.stop();
+      if (Capacitor.isNativePlatform()) {
+        const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
+        await SpeechRecognition.stop();
+      } else {
+        recognitionRef.current?.stop();
+      }
       setIsListening(false);
       return;
     }
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
-    const recognition = new SR();
-    recognition.lang = 'fr-FR';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognitionRef.current = recognition;
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      setIsListening(false);
-    };
-    recognition.start();
+
+    if (Capacitor.isNativePlatform()) {
+      const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
+      const { available } = await SpeechRecognition.available();
+      if (!available) return;
+      await SpeechRecognition.requestPermissions();
+      setIsListening(true);
+      await SpeechRecognition.start({ language: 'fr-FR', maxResults: 1, prompt: '', partialResults: false, popup: false });
+      SpeechRecognition.addListener('partialResults', (data: any) => {
+        if (data.matches?.[0]) { setInput(data.matches[0]); setIsListening(false); }
+      });
+    } else {
+      const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SR) return;
+      const recognition = new SR();
+      recognition.lang = 'fr-FR';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognitionRef.current = recognition;
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+      };
+      recognition.start();
+    }
   };
 
   const suggestions = [
