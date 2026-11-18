@@ -63,7 +63,7 @@ function buildSystemPrompt(ctx: CalixContext): string {
   const hydraStatus = ctx.recovery.hydrationPercent >= 80 ? 'bien hydraté(e)' : ctx.recovery.hydrationPercent >= 50 ? 'hydratation moyenne' : 'peu hydraté(e)';
   const daysSinceSession = ctx.fitness.lastSessionDate
     ? Math.floor((Date.now() - new Date(ctx.fitness.lastSessionDate).getTime()) / 86400000)
-    : 99;
+    : -1;
 
   return `Tu es Calix, le coach IA personnel de ${ctx.name}. Tu es l'unique interlocuteur — une seule voix, cohérente et bienveillante — mais tu maîtrises 4 domaines en profondeur : nutrition, fitness, récupération et motivation.
 
@@ -75,7 +75,7 @@ PROFIL DE ${ctx.name.toUpperCase()} :
 
 DONNÉES DU JOUR (${ctx.timeOfDay === 'morning' ? 'matin' : ctx.timeOfDay === 'afternoon' ? 'après-midi' : ctx.timeOfDay === 'evening' ? 'soir' : 'nuit'}) :
 🍽 NUTRITION : ${ctx.nutrition.kcalConsumed}/${ctx.nutrition.kcalGoal} kcal (${calStatus}) | Protéines : ${ctx.nutrition.protein}g/${ctx.nutrition.proteinGoal}g | ${ctx.nutrition.mealsToday} repas logués
-💪 FITNESS : dernière séance ${daysSinceSession === 0 ? "aujourd'hui" : daysSinceSession === 1 ? 'hier' : `il y a ${daysSinceSession} jours`} (${ctx.fitness.lastSessionDuration} min)
+💪 FITNESS : dernière séance ${daysSinceSession === 0 ? "aujourd'hui" : daysSinceSession === 1 ? 'hier' : daysSinceSession > 0 ? `il y a ${daysSinceSession} jours` : 'aucune encore (nouveau utilisateur)'} (${ctx.fitness.lastSessionDuration > 0 ? ctx.fitness.lastSessionDuration + ' min' : 'N/A'})
 😴 RÉCUPÉRATION : sommeil ${sleepQuality} (score ${ctx.recovery.sleepScore}/100, ${ctx.recovery.sleepHoursLast}h) | ${hydraStatus} (${ctx.recovery.hydrationMl} ml, ${ctx.recovery.hydrationPercent}%)
 
 RÈGLES DE COMMUNICATION :
