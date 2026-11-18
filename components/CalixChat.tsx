@@ -53,7 +53,7 @@ export default function CalixChat({ onClose, initialMessage }: Props) {
     if (isListening) {
       if (Capacitor.isNativePlatform()) {
         const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
-        await SpeechRecognition.stop();
+        await SpeechRecognition.stop().catch(() => {});
       } else {
         recognitionRef.current?.stop();
       }
@@ -67,12 +67,13 @@ export default function CalixChat({ onClose, initialMessage }: Props) {
       const { available } = await SpeechRecognition.available();
       if (!available) return;
       await SpeechRecognition.requestPermissions();
-      // Listener AVANT start pour ne rater aucun résultat
-      SpeechRecognition.addListener('partialResults', (data: any) => {
-        if (data.matches?.[0]) { setInput(data.matches[0]); setIsListening(false); }
-      });
       setIsListening(true);
-      await SpeechRecognition.start({ language: srLang, maxResults: 1, prompt: '', partialResults: true, popup: false });
+      try {
+        const result = await SpeechRecognition.start({ language: srLang, maxResults: 1, prompt: '', partialResults: false, popup: false });
+        if (result?.matches?.[0]) setInput(result.matches[0]);
+      } finally {
+        setIsListening(false);
+      }
     } else {
       const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SR) return;
