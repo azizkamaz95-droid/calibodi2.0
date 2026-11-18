@@ -96,16 +96,32 @@ export function useCalix() {
     store.setLoading(true);
     try {
       const ctx = buildContext(userMessage);
-      const res = await fetch(CALIX_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ctx),
-      });
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errText}`);
+
+      let data: { reply?: string; error?: string };
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { CapacitorHttp } = await import('@capacitor/core');
+        const response = await CapacitorHttp.request({
+          method: 'POST',
+          url: CALIX_URL,
+          headers: { 'Content-Type': 'application/json' },
+          data: ctx,
+        });
+        if (response.status !== 200) throw new Error(`HTTP ${response.status}: ${JSON.stringify(response.data)}`);
+        data = response.data;
+      } else {
+        const res = await fetch(CALIX_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(ctx),
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`HTTP ${res.status}: ${errText}`);
+        }
+        data = await res.json();
       }
-      const data = await res.json();
+
       const reply: string = data.reply || data.error || '';
 
       if (userMessage) {

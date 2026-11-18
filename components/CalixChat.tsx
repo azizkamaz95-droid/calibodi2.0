@@ -15,6 +15,8 @@ export default function CalixChat({ onClose, initialMessage }: Props) {
   const history = useCalixStore((s) => s.history);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const [isListening, setIsListening] = useState(false);
   const [muted, setMuted] = useState(() => {
     try { return localStorage.getItem('calix_muted') === '1'; } catch { return false; }
   });
@@ -42,6 +44,30 @@ export default function CalixChat({ onClose, initialMessage }: Props) {
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  };
+
+  const toggleMic = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const recognition = new SR();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognitionRef.current = recognition;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      setIsListening(false);
+    };
+    recognition.start();
   };
 
   const suggestions = [
@@ -170,6 +196,11 @@ export default function CalixChat({ onClose, initialMessage }: Props) {
             className="flex-1 bg-transparent text-white text-sm outline-none placeholder-gray-600"
             disabled={isLoading}
           />
+          <button onClick={toggleMic} disabled={isLoading}
+            className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 active:scale-90 transition-all disabled:opacity-30 ${isListening ? 'animate-pulse' : ''}`}
+            style={{ background: isListening ? 'linear-gradient(135deg, #FF2D55, #FF0040)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <Mic size={14} className={isListening ? 'text-white' : 'text-gray-400'} />
+          </button>
           <button onClick={handleSend} disabled={!input.trim() || isLoading}
             className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform disabled:opacity-30"
             style={{ background: 'linear-gradient(135deg, #FF6B35, #FF2D55)' }}>

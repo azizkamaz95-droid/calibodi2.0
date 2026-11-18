@@ -74,6 +74,24 @@ jobs:
               print('Intent filter already present')
           PYEOF
 
+      - name: Add RECORD_AUDIO permission to AndroidManifest
+        run: |
+          python3 << 'PYEOF'
+          with open('android/app/src/main/AndroidManifest.xml', 'r') as f:
+              src = f.read()
+          if 'RECORD_AUDIO' not in src:
+              src = src.replace(
+                  '<application',
+                  '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application',
+                  1
+              )
+              with open('android/app/src/main/AndroidManifest.xml', 'w') as f:
+                  f.write(src)
+              print('✓ RECORD_AUDIO permission added')
+          else:
+              print('RECORD_AUDIO already present')
+          PYEOF
+
       - name: Patch ProGuard rules for Capacitor + JS bundle
         run: |
           PROGUARD="android/app/proguard-rules.pro"
