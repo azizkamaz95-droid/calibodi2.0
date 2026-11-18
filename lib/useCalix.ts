@@ -5,7 +5,10 @@ import { useUserStore } from './userStore';
 import { useNutritionStore } from './nutritionStore';
 import { useSleepStore } from './sleepStore';
 import { useHydrationStore } from './hydrationStore';
+import { useLanguageStore } from './languageStore';
 import type { CalixContext } from '../netlify/functions/calix-coach';
+
+const TTS_LANG: Record<string, string> = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', ar: 'ar-SA' };
 
 const CALIX_URL = 'https://calibodi07.netlify.app/.netlify/functions/calix-coach';
 
@@ -25,6 +28,7 @@ export function useCalix() {
   const nutrition = useNutritionStore((s: any) => s);
   const sleep = useSleepStore((s: any) => s);
   const hydration = useHydrationStore((s: any) => s);
+  const userLanguage = useLanguageStore((s) => s.language);
 
   const buildContext = useCallback((userMessage: string): CalixContext => {
     const todayTotals = nutrition.getTodayTotals?.() || { kcal: 0, protein: 0, carbs: 0, fat: 0 };
@@ -76,21 +80,23 @@ export function useCalix() {
       userMessage,
       history: store.getApiHistory(),
       timeOfDay: getTimeOfDay(),
+      userLanguage,
     };
-  }, [user, streak, sessions, nutrition, sleep, hydration, store]);
+  }, [user, streak, sessions, nutrition, sleep, hydration, store, userLanguage]);
 
   const speak = useCallback(async (text: string) => {
+    const lang = TTS_LANG[userLanguage] || 'fr-FR';
     try {
       const { TextToSpeech } = await import('@capacitor-community/text-to-speech');
-      await TextToSpeech.speak({ text, lang: 'fr-FR', rate: 0.95, pitch: 1.0, volume: 1.0, category: 'ambient' });
+      await TextToSpeech.speak({ text, lang, rate: 0.95, pitch: 1.0, volume: 1.0, category: 'ambient' });
     } catch {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         const utt = new SpeechSynthesisUtterance(text);
-        utt.lang = 'fr-FR'; utt.rate = 0.95;
+        utt.lang = lang; utt.rate = 0.95;
         window.speechSynthesis.speak(utt);
       }
     }
-  }, []);
+  }, [userLanguage]);
 
   const ask = useCallback(async (userMessage: string, opts?: { silent?: boolean }): Promise<string> => {
     store.setLoading(true);
@@ -162,5 +168,6 @@ export function useCalix() {
     isLoading: store.isLoading,
     history: store.history,
     clearHistory: store.clearHistory,
+    userLanguage,
   };
 }

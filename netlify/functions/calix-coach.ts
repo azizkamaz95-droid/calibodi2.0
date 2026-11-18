@@ -50,6 +50,9 @@ export interface CalixContext {
 
   // Moment de la journée
   timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+
+  // Langue de l'utilisateur
+  userLanguage?: 'fr' | 'en' | 'es' | 'ar';
 }
 
 function buildSystemPrompt(ctx: CalixContext): string {
@@ -81,7 +84,7 @@ RÈGLES DE COMMUNICATION :
 - Tu utilises les vraies données ci-dessus pour personnaliser chaque message
 - Tu ne te répètes jamais d'une session à l'autre
 - Pas d'emojis sauf 1 max si vraiment pertinent
-- Langue : français uniquement
+- LANGUE OBLIGATOIRE : ${{ fr: 'réponds UNIQUEMENT en français', en: 'respond ONLY in English', es: 'responde ÚNICAMENTE en español', ar: 'أجب باللغة العربية فقط' }[ctx.userLanguage || 'fr']}
 - Si l'utilisateur n'envoie pas de message (ouverture), génère un message de ${ctx.timeOfDay === 'morning' ? 'bonjour motivant basé sur les données du jour' : ctx.timeOfDay === 'evening' ? 'bilan de fin de journée' : 'check-in adapté au moment'}`;
 }
 

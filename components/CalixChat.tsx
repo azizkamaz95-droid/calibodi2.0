@@ -11,7 +11,8 @@ interface Props {
 
 export default function CalixChat({ onClose, initialMessage }: Props) {
   const [input, setInput] = useState('');
-  const { ask, isLoading, speak } = useCalix();
+  const { ask, isLoading, speak, userLanguage } = useCalix();
+  const SR_LANG: Record<string, string> = { fr: 'fr-FR', en: 'en-US', es: 'es-ES', ar: 'ar-SA' };
   const history = useCalixStore((s) => s.history);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,21 +61,23 @@ export default function CalixChat({ onClose, initialMessage }: Props) {
       return;
     }
 
+    const srLang = SR_LANG[userLanguage] || 'fr-FR';
     if (Capacitor.isNativePlatform()) {
       const { SpeechRecognition } = await import('@capacitor-community/speech-recognition');
       const { available } = await SpeechRecognition.available();
       if (!available) return;
       await SpeechRecognition.requestPermissions();
-      setIsListening(true);
-      await SpeechRecognition.start({ language: 'fr-FR', maxResults: 1, prompt: '', partialResults: false, popup: false });
+      // Listener AVANT start pour ne rater aucun résultat
       SpeechRecognition.addListener('partialResults', (data: any) => {
         if (data.matches?.[0]) { setInput(data.matches[0]); setIsListening(false); }
       });
+      setIsListening(true);
+      await SpeechRecognition.start({ language: srLang, maxResults: 1, prompt: '', partialResults: true, popup: false });
     } else {
       const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SR) return;
       const recognition = new SR();
-      recognition.lang = 'fr-FR';
+      recognition.lang = srLang;
       recognition.continuous = false;
       recognition.interimResults = false;
       recognitionRef.current = recognition;
